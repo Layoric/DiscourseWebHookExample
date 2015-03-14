@@ -158,6 +158,11 @@ ClientBin/
 *.pfx
 *.publishsettings
 node_modules/
+bower_components/
+deploy/
+webdeploy.zip
+wwwroot/
+App_Data/
 
 # RIA/Silverlight projects
 Generated_Code/
