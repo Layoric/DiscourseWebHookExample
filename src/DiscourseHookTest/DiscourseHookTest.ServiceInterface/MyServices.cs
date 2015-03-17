@@ -8,6 +8,7 @@ using ServiceStack;
 using DiscourseHookTest.ServiceModel;
 using DiscourseHookTest.ServiceModel.Types;
 using ServiceStack.Configuration;
+using ServiceStack.Logging;
 using ServiceStack.OrmLite;
 using ServiceStack.Text;
 
@@ -33,7 +34,10 @@ namespace DiscourseHookTest.ServiceInterface
 
         public object Post(UserCreatedDiscourseWebHook req)
         {
+            ILog log = LogManager.GetLogger(GetType());
+            
             var rawString = req.RequestStream.ToUtf8String();
+            log.Info("User registered hook fired. \r\n\r\n" + rawString);
             string apiKey = GetApiKeyFromRequest(rawString);
             //Bug with JsonObjectArray? First character of first array element (string) gets dropped
             if (AppSettings.Get("DiscourseApiKey", "") != apiKey)
@@ -41,11 +45,25 @@ namespace DiscourseHookTest.ServiceInterface
                 return null;
             }
             var discourseUser = GetUser(rawString);
-
-            var existingCustomer = Db.Single<ServiceStackCustomer>(x => x.Email == discourseUser.Email);
-            if (existingCustomer != null)
+            log.Info("User email: {0}".Fmt(discourseUser.Email));
+            var existingCustomerSubscription = GetUserSubscription(discourseUser.Email);
+            if (existingCustomerSubscription != null && 
+                existingCustomerSubscription.Expiry != null)
             {
-                ApproveUser(discourseUser);
+                log.Info("User {0} did have a valid subscription. Approving.");
+                try
+                {
+                    ApproveUser(discourseUser);
+                }
+                catch (Exception e)
+                {
+                    log.Error("Error approving user {0} \r\n\r\n {1}".Fmt(discourseUser.Email,e.Message));
+                }
+                
+            }
+            else
+            {
+                log.Info("User {0} did not have a valid subscription");
             }
             
             return null;
@@ -86,6 +104,28 @@ namespace DiscourseHookTest.ServiceInterface
             //First array param is the apiKey from Discourse
             var apiKey = jsonArrayObjects[0].Keys.First();
             return apiKey;
+        }
+
+        private UserServiceResponse GetUserSubscription(string emailAddress)
+        {
+            UserServiceResponse result = null;
+            try
+            {
+                result = JsonSerializer.DeserializeFromString<UserServiceResponse>(
+                                AppSettings.GetString("ServiceStackCheckSubscriptionUrl").Fmt(emailAddress).GetJsonFromUrl());
+            }
+            catch (Exception e)
+            {
+                ILog log = LogManager.GetLogger(GetType());
+                log.Error(e.Message);
+            }
+
+            return result;
+        }
+
+        public class UserServiceResponse
+        {
+            public DateTime? Expiry { get; set; }
         }
     }
 

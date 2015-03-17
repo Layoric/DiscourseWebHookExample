@@ -12,6 +12,8 @@ using DiscourseHookTest.ServiceModel.Types;
 using ServiceStack;
 using ServiceStack.Configuration;
 using ServiceStack.Data;
+using ServiceStack.Logging;
+using ServiceStack.Logging.EventLog;
 using ServiceStack.OrmLite;
 using ServiceStack.Razor;
 using ServiceStack.Text;
@@ -50,36 +52,14 @@ namespace DiscourseHookTest
                 AddRedirectParamsToQueryString = true
             });
 
+            LogManager.LogFactory = new EventLogFactory("DiscourseAutoApprover","Application");
+
             this.Plugins.Add(new RazorFormat());
             container.Register(AppSettings);
-            container.Register<IDbConnectionFactory>(new OrmLiteConnectionFactory("~/App_Data/db.sqlite".MapHostAbsolutePath(),
-                SqliteDialect.Provider));
+            //container.Register<IDbConnectionFactory>(new OrmLiteConnectionFactory("~/App_Data/db.sqlite".MapHostAbsolutePath(),
+            //    SqliteDialect.Provider));
 
-            using (var db = container.Resolve<IDbConnectionFactory>().OpenDbConnection())
-            {
-                db.CreateTableIfNotExists<ServiceStackCustomer>();
-                if (db.Count<ServiceStackCustomer>() == 0)
-                {
-                    db.Insert(new ServiceStackCustomer
-                    {
-                        Email = "layoric+utest1@gmail.com",
-                        SubscriptionExpiry = new DateTime(2015, 6, 1)
-                    });
-                    db.Insert(new ServiceStackCustomer
-                    {
-                        Email = "layoric+utest2@gmail.com",
-                        SubscriptionExpiry = new DateTime(2015, 6, 1)
-                    }); db.Insert(new ServiceStackCustomer
-                    {
-                        Email = "layoric+utest3@gmail.com",
-                        SubscriptionExpiry = new DateTime(2015, 6, 1)
-                    }); db.Insert(new ServiceStackCustomer
-                    {
-                        Email = "layoric+utest4@gmail.com",
-                        SubscriptionExpiry = new DateTime(2015, 6, 1)
-                    });
-                }
-            }
+
         }
     }
 }

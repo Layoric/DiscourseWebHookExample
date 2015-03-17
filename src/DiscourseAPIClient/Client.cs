@@ -196,11 +196,10 @@ namespace DiscourseAPIClient
                     webReq.Headers.Add("X-CSRF-Token", csrf);
                     webReq.Headers.Add("X-Request-With", "XMLHttpRequest");
                     webReq.CookieContainer = client.CookieContainer;
-                },
-                    (webRes) =>
-                    {
-                        client.CookieContainer.Add(webRes.Cookies);
-                    });
+                }, (webRes) =>
+                {
+                    client.CookieContainer.Add(webRes.Cookies);
+                });
                 return JsonSerializer.DeserializeFromString<AdminApproveUserResponse>(res);
             }
         }
