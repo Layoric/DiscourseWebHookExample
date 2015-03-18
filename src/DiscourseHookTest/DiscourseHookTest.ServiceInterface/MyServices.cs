@@ -17,6 +17,8 @@ namespace DiscourseHookTest.ServiceInterface
     public class MyServices : Service
     {
         public IAppSettings AppSettings { get; set; }
+        public IDiscourseClient DiscourseClient { get; set; }
+        public IServiceStackAccountClient ServiceStackAccountClient { get; set; }
 
         public object Any(Hello request)
         {
@@ -40,13 +42,14 @@ namespace DiscourseHookTest.ServiceInterface
             log.Info("User registered hook fired. \r\n\r\n" + rawString);
             string apiKey = GetApiKeyFromRequest(rawString);
             //Bug with JsonObjectArray? First character of first array element (string) gets dropped
+            // eg, ["testValue",{},{}] first element key equals "estValue"
             if (AppSettings.Get("DiscourseApiKey", "") != apiKey)
             {
                 return null;
             }
             var discourseUser = GetUser(rawString);
             log.Info("User email: {0}".Fmt(discourseUser.Email));
-            var existingCustomerSubscription = GetUserSubscription(discourseUser.Email);
+            var existingCustomerSubscription = ServiceStackAccountClient.GetUserSubscription(discourseUser.Email);
             if (existingCustomerSubscription != null && 
                 existingCustomerSubscription.Expiry != null)
             {
@@ -71,12 +74,17 @@ namespace DiscourseHookTest.ServiceInterface
 
         private void ApproveUser(DiscourseUser discourseUser)
         {
-            var client = new DiscourseClient(
-                AppSettings.Get("DiscourseRemoteUrl", ""),
-                AppSettings.Get("DiscourseAdminApiKey", ""),
-                AppSettings.Get("DiscourseAdminUserName", ""));
-            client.Login(AppSettings.Get("DiscourseAdminUserName", ""), AppSettings.Get("DiscourseAdminPassword", ""));
-            client.AdminApproveUser(discourseUser.Id);
+            try
+            {
+                DiscourseClient.AdminApproveUser(discourseUser.Id);
+            }
+            catch (Exception)
+            {
+                //Try to login again and retry
+                DiscourseClient.Login(AppSettings.Get("DiscourseAdminUserName", ""), AppSettings.Get("DiscourseAdminPassword", ""));
+                DiscourseClient.AdminApproveUser(discourseUser.Id);
+            }
+            
         }
 
         private DiscourseUser GetUser(string rawRequest)
@@ -105,14 +113,28 @@ namespace DiscourseHookTest.ServiceInterface
             var apiKey = jsonArrayObjects[0].Keys.First();
             return apiKey;
         }
+    }
 
-        private UserServiceResponse GetUserSubscription(string emailAddress)
+    public interface IServiceStackAccountClient
+    {
+        UserServiceResponse GetUserSubscription(string emailAddress);
+    }
+
+    public class ServiceStackAccountClient : IServiceStackAccountClient
+    {
+        private readonly string serviceUrl;
+        public ServiceStackAccountClient(string url)
+        {
+            serviceUrl = url;
+        }
+
+        public UserServiceResponse GetUserSubscription(string emailAddress)
         {
             UserServiceResponse result = null;
             try
             {
                 result = JsonSerializer.DeserializeFromString<UserServiceResponse>(
-                                AppSettings.GetString("ServiceStackCheckSubscriptionUrl").Fmt(emailAddress).GetJsonFromUrl());
+                                serviceUrl.Fmt(emailAddress).GetJsonFromUrl());
             }
             catch (Exception e)
             {
@@ -122,11 +144,11 @@ namespace DiscourseHookTest.ServiceInterface
 
             return result;
         }
+    }
 
-        public class UserServiceResponse
-        {
-            public DateTime? Expiry { get; set; }
-        }
+    public class UserServiceResponse
+    {
+        public DateTime? Expiry { get; set; }
     }
 
     [FallbackRoute("/{PathInfo*}")]

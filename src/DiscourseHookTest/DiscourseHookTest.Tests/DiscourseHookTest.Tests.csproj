@@ -65,6 +65,10 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\DiscourseAPIClient\DiscourseAPIClient.csproj">
+      <Project>{25A0D308-26A9-4021-899A-8B9B36D787F6}</Project>
+      <Name>DiscourseAPIClient</Name>
+    </ProjectReference>
     <ProjectReference Include="..\DiscourseHookTest.ServiceInterface\DiscourseHookTest.ServiceInterface.csproj">
       <Project>{582dfb0f-f84d-4e43-9bca-2a5a86600b7a}</Project>
       <Name>DiscourseHookTest.ServiceInterface</Name>

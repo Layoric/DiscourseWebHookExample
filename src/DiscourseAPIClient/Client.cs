@@ -10,7 +10,22 @@ using ServiceStack.Text;
 
 namespace DiscourseAPIClient
 {
-    public class DiscourseClient
+
+    public interface IDiscourseClient
+    {
+        void Login(string userName, string pass);
+        GetCategoriesResponse GetCategories();
+        GetCategoryResponse GetCategory(int id);
+        CreateCategoryResponse CreateCategory(string name, string color, string textColor);
+        AdminApproveUserResponse AdminApproveUser(int userId);
+        AdminUpdateUserResponse AdminUpdateUserBlockedStatus(string userName, bool blocked);
+        ReplyToPostResponse CreateReply(int category, int topicId, int? postId, string content);
+        CreatePostResponse CreateTopic(int categoryId, string title, string content);
+        GetTopicResponse GetTopic(int id);
+        GetLatestTopicsResponse GetTopics();
+    }
+
+    public class DiscourseClient : IDiscourseClient
     {
         public string ApiKey { get; private set; }
         public string UserName { get; private set; }
@@ -24,7 +39,6 @@ namespace DiscourseAPIClient
             ApiKey = apiKey;
             UserName = userName;
             client = new JsonServiceClient(url);
-            client.Get(url.AppendPath("top.json").AddQueryParam("api_key", apiKey).AddQueryParam("api_username", userName));
         }
 
         [Route("/session")]

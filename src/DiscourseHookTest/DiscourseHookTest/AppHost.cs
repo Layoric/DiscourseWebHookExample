@@ -5,6 +5,7 @@ using System.Linq;
 using System.Net;
 using System.Reflection;
 using System.Web;
+using DiscourseAPIClient;
 using Funq;
 using DiscourseHookTest.ServiceInterface;
 using DiscourseHookTest.ServiceModel;
@@ -56,10 +57,16 @@ namespace DiscourseHookTest
 
             this.Plugins.Add(new RazorFormat());
             container.Register(AppSettings);
-            //container.Register<IDbConnectionFactory>(new OrmLiteConnectionFactory("~/App_Data/db.sqlite".MapHostAbsolutePath(),
-            //    SqliteDialect.Provider));
 
+            var client = new DiscourseClient(
+                AppSettings.Get("DiscourseRemoteUrl", ""),
+                AppSettings.Get("DiscourseAdminApiKey", ""),
+                AppSettings.Get("DiscourseAdminUserName", ""));
+            client.Login(AppSettings.Get("DiscourseAdminUserName", ""), AppSettings.Get("DiscourseAdminPassword", ""));
+            container.Register<IDiscourseClient>(client);
 
+            var serviceStackAccountClient = new ServiceStackAccountClient(AppSettings.GetString("ServiceStackCheckSubscriptionUrl"));
+            container.Register<IServiceStackAccountClient>(serviceStackAccountClient);
         }
     }
 }
