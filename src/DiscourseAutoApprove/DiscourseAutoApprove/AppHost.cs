@@ -54,7 +54,7 @@ namespace DiscourseAutoApprove
             client.Login(AppSettings.Get("DiscourseAdminUserName", ""), AppSettings.Get("DiscourseAdminPassword", ""));
             container.Register<IDiscourseClient>(client);
 
-            var serviceStackAccountClient = new ServiceStackAccountClient(AppSettings.GetString("ServiceStackCheckSubscriptionUrl"));
+            var serviceStackAccountClient = new ServiceStackAccountClient(AppSettings.GetString("CheckSubscriptionUrl"));
             container.Register<IServiceStackAccountClient>(serviceStackAccountClient);
         }
     }
