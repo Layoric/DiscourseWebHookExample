@@ -47,7 +47,8 @@ namespace DiscourseAutoApprove.ServiceInterface
                 log.Info("User email: {0}".Fmt(discourseUser.Email));
                 var existingCustomerSubscription = ServiceStackAccountClient.GetUserSubscription(discourseUser.Email);
                 if (existingCustomerSubscription != null &&
-                    existingCustomerSubscription.Expiry != null)
+                    existingCustomerSubscription.Expiry != null &&
+                    existingCustomerSubscription.Expiry > DateTime.Now)
                 {
                     log.Info("User {0} with email {1} did have a valid subscription. Approving.".Fmt(discourseUser.Id, discourseUser.Email));
                     try
