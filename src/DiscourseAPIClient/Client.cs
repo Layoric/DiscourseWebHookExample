@@ -6,6 +6,7 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using DiscourseAPIClient.Types;
 using ServiceStack;
+using ServiceStack.Logging;
 using ServiceStack.Text;
 
 namespace DiscourseAPIClient

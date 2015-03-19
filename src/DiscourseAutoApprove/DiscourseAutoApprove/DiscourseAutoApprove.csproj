@@ -11,8 +11,8 @@
     <ProjectTypeGuids>{349c5851-65df-11da-9384-00065b846f21};{fae04ec0-301f-11d3-bf4b-00c04f79efbc}</ProjectTypeGuids>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>DiscourseHookTest</RootNamespace>
-    <AssemblyName>DiscourseHookTest</AssemblyName>
+    <RootNamespace>DiscourseAutoApprove</RootNamespace>
+    <AssemblyName>DiscourseAutoApprove</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <UseIISExpress>true</UseIISExpress>
     <IISExpressSSLPort />
@@ -147,13 +147,13 @@
       <Project>{25A0D308-26A9-4021-899A-8B9B36D787F6}</Project>
       <Name>DiscourseAPIClient</Name>
     </ProjectReference>
-    <ProjectReference Include="..\DiscourseHookTest.ServiceInterface\DiscourseHookTest.ServiceInterface.csproj">
+    <ProjectReference Include="..\DiscourseAutoApprove.ServiceInterface\DiscourseAutoApprove.ServiceInterface.csproj">
       <Project>{582dfb0f-f84d-4e43-9bca-2a5a86600b7a}</Project>
-      <Name>DiscourseHookTest.ServiceInterface</Name>
+      <Name>DiscourseAutoApprove.ServiceInterface</Name>
     </ProjectReference>
-    <ProjectReference Include="..\DiscourseHookTest.ServiceModel\DiscourseHookTest.ServiceModel.csproj">
+    <ProjectReference Include="..\DiscourseAutoApprove.ServiceModel\DiscourseAutoApprove.ServiceModel.csproj">
       <Project>{08bef328-ab7d-48d3-800d-48acc75c7914}</Project>
-      <Name>DiscourseHookTest.ServiceModel</Name>
+      <Name>DiscourseAutoApprove.ServiceModel</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

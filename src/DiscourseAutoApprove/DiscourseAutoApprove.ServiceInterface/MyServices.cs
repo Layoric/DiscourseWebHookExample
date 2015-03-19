@@ -1,18 +1,13 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net;
-using System.Web;
+using System.Threading.Tasks;
 using DiscourseAPIClient;
+using DiscourseAutoApprove.ServiceModel;
 using ServiceStack;
-using DiscourseHookTest.ServiceModel;
-using DiscourseHookTest.ServiceModel.Types;
 using ServiceStack.Configuration;
 using ServiceStack.Logging;
-using ServiceStack.OrmLite;
 using ServiceStack.Text;
 
-namespace DiscourseHookTest.ServiceInterface
+namespace DiscourseAutoApprove.ServiceInterface
 {
     public class MyServices : Service
     {
@@ -36,44 +31,46 @@ namespace DiscourseHookTest.ServiceInterface
 
         public object Post(UserCreatedDiscourseWebHook req)
         {
-            ILog log = LogManager.GetLogger(GetType());
-            
-            var rawString = req.RequestStream.ToUtf8String();
-            log.Info("User registered hook fired. \r\n\r\n" + rawString);
-            string apiKey = GetApiKeyFromRequest(rawString);
-            //Bug with JsonObjectArray? First character of first array element (string) gets dropped
-            // eg, ["testValue",{},{}] first element key equals "estValue"
-            if (AppSettings.Get("DiscourseApiKey", "") != apiKey)
+            return Task.Factory.StartNew(() =>
             {
-                return null;
-            }
-            var discourseUser = GetUser(rawString);
-            log.Info("User email: {0}".Fmt(discourseUser.Email));
-            var existingCustomerSubscription = ServiceStackAccountClient.GetUserSubscription(discourseUser.Email);
-            if (existingCustomerSubscription != null && 
-                existingCustomerSubscription.Expiry != null)
-            {
-                log.Info("User {0} did have a valid subscription. Approving.");
-                try
+                ILog log = LogManager.GetLogger(GetType());
+
+                var rawString = req.RequestStream.ToUtf8String();
+                log.Info("User registered hook fired. \r\n\r\n" + rawString);
+                string apiKey = GetApiKeyFromRequest(rawString);
+                if (AppSettings.Get("DiscourseApiKey", "") != apiKey)
                 {
-                    ApproveUser(discourseUser);
+                    log.Warn("Invalid api key used - " + apiKey);
+                    return;
                 }
-                catch (Exception e)
+                var discourseUser = GetUser(rawString);
+                log.Info("User email: {0}".Fmt(discourseUser.Email));
+                var existingCustomerSubscription = ServiceStackAccountClient.GetUserSubscription(discourseUser.Email);
+                if (existingCustomerSubscription != null &&
+                    existingCustomerSubscription.Expiry != null)
                 {
-                    log.Error("Error approving user {0} \r\n\r\n {1}".Fmt(discourseUser.Email,e.Message));
+                    log.Info("User {0} with email {1} did have a valid subscription. Approving.".Fmt(discourseUser.Id, discourseUser.Email));
+                    try
+                    {
+                        ApproveUser(discourseUser);
+                    }
+                    catch (Exception e)
+                    {
+                        log.Error("Error approving user {0} \r\n\r\n {1}".Fmt(discourseUser.Email, e.Message));
+                    }
+
                 }
-                
-            }
-            else
-            {
-                log.Info("User {0} did not have a valid subscription");
-            }
-            
-            return null;
+                else
+                {
+                    log.Info("User {0} with email {1} did not have a valid subscription".Fmt(discourseUser.Id,discourseUser.Email));
+                }
+            });
         }
 
-        private void ApproveUser(DiscourseUser discourseUser)
+        private async void ApproveUser(DiscourseUser discourseUser)
         {
+            //Wait 10 seconds for the user to be created
+            await Task.Delay(TimeSpan.FromSeconds(10));
             try
             {
                 DiscourseClient.AdminApproveUser(discourseUser.Id);
@@ -84,7 +81,6 @@ namespace DiscourseHookTest.ServiceInterface
                 DiscourseClient.Login(AppSettings.Get("DiscourseAdminUserName", ""), AppSettings.Get("DiscourseAdminPassword", ""));
                 DiscourseClient.AdminApproveUser(discourseUser.Id);
             }
-            
         }
 
         private DiscourseUser GetUser(string rawRequest)
@@ -108,9 +104,8 @@ namespace DiscourseHookTest.ServiceInterface
 
         private string GetApiKeyFromRequest(string rawRequest)
         {
-            var jsonArrayObjects = JsonArrayObjects.Parse(rawRequest);
-            //First array param is the apiKey from Discourse
-            var apiKey = jsonArrayObjects[0].Keys.First();
+            var parts = rawRequest.SplitOnFirst(',');
+            var apiKey = parts[0].Trim('[', '"');
             return apiKey;
         }
     }

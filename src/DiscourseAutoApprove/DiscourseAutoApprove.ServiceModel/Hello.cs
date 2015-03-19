@@ -1,12 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Web;
+﻿using System.IO;
 using ServiceStack;
 using ServiceStack.Web;
 
-namespace DiscourseHookTest.ServiceModel
+namespace DiscourseAutoApprove.ServiceModel
 {
     [Route("/hello/{Name}")]
     public class Hello : IReturn<HelloResponse>

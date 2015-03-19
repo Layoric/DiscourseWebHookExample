@@ -1,7 +1,7 @@
 {
-    "name": "DiscourseHookTest",
+    "name": "DiscourseAutoApprove",
     "version": "0.0.1",
-    "description": "DiscourseHookTest",
+    "description": "DiscourseAutoApprove",
     "main": "tests/karma.conf.js",
     "author": "",
     "private": true,

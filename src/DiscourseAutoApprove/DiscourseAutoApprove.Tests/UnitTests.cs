@@ -1,17 +1,18 @@
 ﻿using System;
 using System.IO;
+using System.Threading.Tasks;
 using DiscourseAPIClient;
 using DiscourseAPIClient.Types;
+using DiscourseAutoApprove.ServiceInterface;
+using DiscourseAutoApprove.ServiceModel;
+using Funq;
 using NUnit.Framework;
 using ServiceStack;
-using ServiceStack.Testing;
-using DiscourseHookTest.ServiceModel;
-using DiscourseHookTest.ServiceInterface;
-using Funq;
 using ServiceStack.Logging;
 using ServiceStack.Support;
+using ServiceStack.Testing;
 
-namespace DiscourseHookTest.Tests
+namespace DiscourseAutoApprove.Tests
 {
     [TestFixture]
     public class UnitTests
@@ -67,7 +68,8 @@ namespace DiscourseHookTest.Tests
             var service = appHost.Container.Resolve<MyServices>();
 
             var req = new UserCreatedDiscourseWebHook {RequestStream = new MemoryStream(invalidEmailInput.ToUtf8Bytes())};
-            var response = service.Post(req);
+            var response = service.Post(req) as Task;
+            response.Wait();
             var discourseClient = appHost.Resolve<IDiscourseClient>() as MockDiscourseClient;
             Assert.That(discourseClient != null);
             Assert.That(discourseClient.ApproveCalledCount == 0);
@@ -79,7 +81,8 @@ namespace DiscourseHookTest.Tests
             var service = appHost.Container.Resolve<MyServices>();
 
             var req = new UserCreatedDiscourseWebHook { RequestStream = new MemoryStream(validEmailInput.ToUtf8Bytes()) };
-            var response = service.Post(req);
+            var response = service.Post(req) as Task;
+            response.Wait();
             var discourseClient = appHost.Resolve<IDiscourseClient>() as MockDiscourseClient;
             Assert.That(discourseClient != null);
             Assert.That(discourseClient.ApproveCalledCount > 0);
@@ -126,6 +129,12 @@ namespace DiscourseHookTest.Tests
         {
             ApproveCalledCount++;
             return new AdminApproveUserResponse();
+        }
+
+        public Task<AdminApproveUserResponse> AdminApproveUserAsync(int userId)
+        {
+            ApproveCalledCount++;
+            return new Task<AdminApproveUserResponse>(() => new AdminApproveUserResponse());
         }
 
         public AdminUpdateUserResponse AdminUpdateUserBlockedStatus(string userName, bool blocked)

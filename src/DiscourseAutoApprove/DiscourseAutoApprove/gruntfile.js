@@ -36,7 +36,7 @@ module.exports = function (grunt) {
         },
         msbuild: {
             release: {
-                src: ['DiscourseHookTest.csproj'],
+                src: ['DiscourseAutoApprove.csproj'],
                 options: {
                     projectConfiguration: 'Release',
                     targets: ['Clean', 'Rebuild'],

@@ -3,13 +3,13 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2013
 VisualStudioVersion = 12.0.31101.0
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DiscourseHookTest", "DiscourseHookTest\DiscourseHookTest\DiscourseHookTest.csproj", "{6F86FC59-9DE7-4BF5-8D11-CB7E99DA29FC}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DiscourseAutoApprove", "DiscourseAutoApprove\DiscourseAutoApprove\DiscourseAutoApprove.csproj", "{6F86FC59-9DE7-4BF5-8D11-CB7E99DA29FC}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DiscourseHookTest.ServiceModel", "DiscourseHookTest\DiscourseHookTest.ServiceModel\DiscourseHookTest.ServiceModel.csproj", "{08BEF328-AB7D-48D3-800D-48ACC75C7914}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DiscourseAutoApprove.ServiceModel", "DiscourseAutoApprove\DiscourseAutoApprove.ServiceModel\DiscourseAutoApprove.ServiceModel.csproj", "{08BEF328-AB7D-48D3-800D-48ACC75C7914}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DiscourseHookTest.ServiceInterface", "DiscourseHookTest\DiscourseHookTest.ServiceInterface\DiscourseHookTest.ServiceInterface.csproj", "{582DFB0F-F84D-4E43-9BCA-2A5A86600B7A}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DiscourseAutoApprove.ServiceInterface", "DiscourseAutoApprove\DiscourseAutoApprove.ServiceInterface\DiscourseAutoApprove.ServiceInterface.csproj", "{582DFB0F-F84D-4E43-9BCA-2A5A86600B7A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DiscourseHookTest.Tests", "DiscourseHookTest\DiscourseHookTest.Tests\DiscourseHookTest.Tests.csproj", "{B1665387-EF91-4CA0-82BB-66E5781ED800}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DiscourseAutoApprove.Tests", "DiscourseAutoApprove\DiscourseAutoApprove.Tests\DiscourseAutoApprove.Tests.csproj", "{B1665387-EF91-4CA0-82BB-66E5781ED800}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DiscourseAPIClient", "DiscourseAPIClient\DiscourseAPIClient.csproj", "{25A0D308-26A9-4021-899A-8B9B36D787F6}"
 EndProject
