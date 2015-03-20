@@ -34,30 +34,58 @@ namespace DiscourseAutoApprove.ServiceInterface
         {
             return Task.Factory.StartNew(() =>
             {
+                ILog log = LogManager.GetLogger(GetType());
                 var users = DiscourseClient.AdminGetUsers();
                 // space discourse requests 2 seconds a part (avoid Discourse rate limiting errors). 
                 // Sync process will take (number of users * 2 + delay to get subscription) seconds.
                 // Eg, 160 users will take ~7 mins but response to webhook request should only take ~30-60 seconds depending on user subscription service.
-                // Since it's a long running task, might be nice to hook it up to a dashboard with Server Side Events
                 int spaceDiscourseRequestsCount = 0;
                 int interval = request.StaggerRequestsBy ?? 2;
                 foreach (var user in users)
                 {
                     spaceDiscourseRequestsCount += interval;
-                    var existingCustomerSubscription = ServiceStackAccountClient.GetUserSubscription(user.Email);
-                    if (UserNeedsApproval(user) && UserHasValidSubscription(existingCustomerSubscription))
+                    UserServiceResponse existingCustomerSubscription = null;
+                    try
                     {
-                        ApproveUserAsync(user, spaceDiscourseRequestsCount);
+                        existingCustomerSubscription = ServiceStackAccountClient.GetUserSubscription(user.Email);
+                    }
+                    catch (Exception e)
+                    {
+                        log.Error("Failed to check user's subscription. Retrying...");
+                        try
+                        {
+                            existingCustomerSubscription = ServiceStackAccountClient.GetUserSubscription(user.Email);
+                        }
+                        catch (Exception)
+                        {
+                            log.Error("Failed to check user's subscription. Cancelling sync.");
+                            break;
+                        }
                     }
 
-                    if (!UserNeedsApproval(user) && !UserHasValidSubscription(existingCustomerSubscription))
+                    try
                     {
-                        SuspendUserAsync(user, spaceDiscourseRequestsCount);
-                    }
+                        if (UserNeedsApproval(user) && UserHasValidSubscription(existingCustomerSubscription))
+                        {
+                            log.Info("Approving user '{0}'.".Fmt(user.Email));
+                            ApproveUserAsync(user, spaceDiscourseRequestsCount);
+                        }
 
-                    if (!UserNeedsApproval(user) && user.Suspended == true)
+                        if (!UserNeedsApproval(user) && !UserHasValidSubscription(existingCustomerSubscription))
+                        {
+                            log.Info("Suspending user '{0}'.".Fmt(user.Email));
+                            SuspendUserAsync(user, spaceDiscourseRequestsCount);
+                        }
+
+                        if (!UserNeedsApproval(user) && user.Suspended == true)
+                        {
+                            log.Info("Unsuspending user '{0}'.".Fmt(user.Email));
+                            UnsuspendUserAsync(user, spaceDiscourseRequestsCount);
+                        }
+                    }
+                    catch (Exception e)
                     {
-                        UnsuspendUserAsync(user, spaceDiscourseRequestsCount);
+                        log.Error("Failed to update Discourse for user '{0}'.".Fmt(user.Email));
                     }
                 }
             });
@@ -87,7 +115,7 @@ namespace DiscourseAutoApprove.ServiceInterface
                 string apiKey = GetApiKeyFromRequest(rawString);
                 if (AppSettings.Get("DiscourseApiKey", "") != apiKey)
                 {
-                    log.Warn("Invalid api key used - " + apiKey);
+                    log.Warn("Invalid api key used - {0}.".Fmt(apiKey));
                     return;
                 }
                 var discourseUser = GetUser(rawString);
@@ -106,7 +134,6 @@ namespace DiscourseAutoApprove.ServiceInterface
                     {
                         log.Error("Error approving user {0} \r\n\r\n {1}".Fmt(discourseUser.Email, e.Message));
                     }
-
                 }
                 else
                 {
@@ -117,22 +144,7 @@ namespace DiscourseAutoApprove.ServiceInterface
 
         private async void ApproveUserAsync(DiscourseUser discourseUser, int delay)
         {
-            //Wait 10 seconds for the user to be created
             await Task.Delay(TimeSpan.FromSeconds(delay));
-            try
-            {
-                DiscourseClient.AdminApproveUser(discourseUser.Id);
-            }
-            catch (Exception)
-            {
-                //Try to login again and retry
-                DiscourseClient.Login(AppSettings.Get("DiscourseAdminUserName", ""), AppSettings.Get("DiscourseAdminPassword", ""));
-                DiscourseClient.AdminApproveUser(discourseUser.Id);
-            }
-        }
-
-        private void ApproveUser(DiscourseUser discourseUser)
-        {
             try
             {
                 DiscourseClient.AdminApproveUser(discourseUser.Id);
