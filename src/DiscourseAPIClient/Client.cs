@@ -20,6 +20,7 @@ namespace DiscourseAPIClient
         CreateCategoryResponse CreateCategory(string name, string color, string textColor);
         AdminApproveUserResponse AdminApproveUser(int userId);
         AdminSuspendUserResponse AdminSuspendUser(int userId, int days, string reasonGiven);
+        AdminUnsuspendUserResponse AdminUnsuspendUser(int userId);
         ReplyToPostResponse CreateReply(int category, int topicId, int? postId, string content);
         CreatePostResponse CreateTopic(int categoryId, string title, string content);
         GetTopicResponse GetTopic(int id);
@@ -249,6 +250,36 @@ namespace DiscourseAPIClient
             }
         }
 
+        /// <summary>
+        /// Requires Login method to be used as not an normal API call
+        /// </summary>
+        /// <param name="userId"></param>
+        /// <returns></returns>
+        public AdminUnsuspendUserResponse AdminUnsuspendUser(int userId)
+        {
+            using (JsConfig
+                .With(propertyConvention: PropertyConvention.Lenient,
+                    emitLowercaseUnderscoreNames: true,
+                    emitCamelCaseNames: false))
+            {
+                var request = new AdminUnsuspendUser { UserId = userId };
+                var requestUrl = request.ToPutUrl()
+                    .AddQueryParam("api_key", ApiKey).AddQueryParam("api_username", UserName);
+                requestUrl = client.BaseUri.Substring(0, client.BaseUri.Length - 1) + requestUrl;
+                var res = requestUrl.PutToUrl(null, "*/*", (webReq) =>
+                {
+                    webReq.ContentType = "application/x-www-form-urlencoded; charset=UTF-8";
+                    webReq.Headers.Add("X-CSRF-Token", csrf);
+                    webReq.Headers.Add("X-Request-With", "XMLHttpRequest");
+                    webReq.CookieContainer = client.CookieContainer;
+                }, (webRes) =>
+                {
+                    client.CookieContainer.Add(webRes.Cookies);
+                });
+                return JsonSerializer.DeserializeFromString<AdminUnsuspendUserResponse>(res);
+            }
+        }
+
         public CreateCategoryResponse CreateCategory(string name, string color, string textColor)
         {
             using (JsConfig
@@ -334,6 +365,12 @@ namespace DiscourseAPIClient
 
     [Route("/admin/users/{UserId}/suspend", "PUT")]
     public class AdminSuspendUser : IReturn<AdminSuspendUserResponse>
+    {
+        public int UserId { get; set; }
+    }
+
+    [Route("/admin/users/{UserId}/unsuspend", "PUT")]
+    public class AdminUnsuspendUser : IReturn<AdminUnsuspendUserResponse>
     {
         public int UserId { get; set; }
     }

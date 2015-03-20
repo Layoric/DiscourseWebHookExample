@@ -417,6 +417,11 @@ namespace DiscourseAPIClient.Types
         
     }
 
+    public class AdminUnsuspendUserResponse
+    {
+
+    }
+
     public class ReplyToPostResponse
     {
         public int Id { get; set; }

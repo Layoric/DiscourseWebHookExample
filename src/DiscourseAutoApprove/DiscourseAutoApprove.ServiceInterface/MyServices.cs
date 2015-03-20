@@ -53,6 +53,11 @@ namespace DiscourseAutoApprove.ServiceInterface
                     {
                         SuspendUserAsync(user, spaceDiscourseRequestsCount);
                     }
+
+                    if (!UserNeedsApproval(user) && user.Suspended == true)
+                    {
+                        UnsuspendUserAsync(user, spaceDiscourseRequestsCount);
+                    }
                 }
             });
         }
@@ -151,6 +156,21 @@ namespace DiscourseAutoApprove.ServiceInterface
                 //Try to login again and retry
                 DiscourseClient.Login(AppSettings.Get("DiscourseAdminUserName", ""), AppSettings.Get("DiscourseAdminPassword", ""));
                 DiscourseClient.AdminSuspendUser(user.Id, 365, AppSettings.GetString("DiscourseSuspensionReason"));
+            }
+        }
+
+        private async void UnsuspendUserAsync(DiscourseUser user, int delay)
+        {
+            await Task.Delay(TimeSpan.FromSeconds(delay));
+            try
+            {
+                DiscourseClient.AdminUnsuspendUser(user.Id);
+            }
+            catch (Exception)
+            {
+                //Try to login again and retry
+                DiscourseClient.Login(AppSettings.Get("DiscourseAdminUserName", ""), AppSettings.Get("DiscourseAdminPassword", ""));
+                DiscourseClient.AdminUnsuspendUser(user.Id);
             }
         }
 

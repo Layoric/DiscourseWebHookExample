@@ -91,7 +91,14 @@ namespace DiscourseAutoApprove.Tests
         [Test]
         public void TestSyncAllUsers()
         {
-            
+            var service = appHost.Container.Resolve<MyServices>();
+
+            var req = new SyncServiceStackCustomers();
+            var response = service.Any(req) as Task;
+            response.Wait();
+            var discourseClient = appHost.Resolve<IDiscourseClient>() as MockDiscourseClient;
+            Assert.That(discourseClient != null);
+            Assert.That(discourseClient.ApproveCalledCount > 0);
         }
     }
 
@@ -143,6 +150,11 @@ namespace DiscourseAutoApprove.Tests
             throw new NotImplementedException();
         }
 
+        public AdminUnsuspendUserResponse AdminUnsuspendUser(int userId)
+        {
+            throw new NotImplementedException();
+        }
+
         public Task<AdminApproveUserResponse> AdminApproveUserAsync(int userId)
         {
             ApproveCalledCount++;
@@ -171,7 +183,12 @@ namespace DiscourseAutoApprove.Tests
 
         public AdminGetUsersWithEmailResponse AdminGetUsers()
         {
-            throw new NotImplementedException();
+            var result = new AdminGetUsersWithEmailResponse();
+            result.Add(new DiscourseUser { Email = "test1@test.com", Approved = true}); // Do nothing
+            result.Add(new DiscourseUser { Email = "test2@test.com", Approved = false}); //Approve
+            result.Add(new DiscourseUser { Email = "test3@test.com", Approved = true, Suspended = true});// Reactivate
+            result.Add(new DiscourseUser { Email = "layoric+u15@gmail.com", Approved = true}); //Suspend
+            return result;
         }
     }
 }
