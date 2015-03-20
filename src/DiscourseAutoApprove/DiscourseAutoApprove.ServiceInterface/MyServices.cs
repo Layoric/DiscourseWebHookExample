@@ -34,7 +34,7 @@ namespace DiscourseAutoApprove.ServiceInterface
         {
             return Task.Factory.StartNew(() =>
             {
-                ILog log = LogManager.GetLogger(GetType());
+                var log = LogManager.GetLogger(GetType());
                 var users = DiscourseClient.AdminGetUsers();
                 // space discourse requests 2 seconds a part (avoid Discourse rate limiting errors). 
                 // Sync process will take (number of users * 2 + delay to get subscription) seconds.
@@ -43,22 +43,28 @@ namespace DiscourseAutoApprove.ServiceInterface
                 int interval = request.StaggerRequestsBy ?? 2;
                 foreach (var user in users)
                 {
+                    //Don't process discourse administrators
+                    if (user.Admin)
+                    {
+                        continue;
+                    }
+                        
                     spaceDiscourseRequestsCount += interval;
-                    UserServiceResponse existingCustomerSubscription = null;
+                    UserServiceResponse existingCustomerSubscription;
                     try
                     {
                         existingCustomerSubscription = ServiceStackAccountClient.GetUserSubscription(user.Email);
                     }
                     catch (Exception e)
                     {
-                        log.Error("Failed to check user's subscription. Retrying...");
+                        log.Error("Failed to check user's subscription. Retrying... - {0}".Fmt(e.Message));
                         try
                         {
                             existingCustomerSubscription = ServiceStackAccountClient.GetUserSubscription(user.Email);
                         }
-                        catch (Exception)
+                        catch (Exception ex)
                         {
-                            log.Error("Failed to check user's subscription. Cancelling sync.");
+                            log.Error("Failed to check user's subscription. Cancelling sync. - {0}".Fmt(ex.Message));
                             break;
                         }
                     }
@@ -85,7 +91,7 @@ namespace DiscourseAutoApprove.ServiceInterface
                     }
                     catch (Exception e)
                     {
-                        log.Error("Failed to update Discourse for user '{0}'.".Fmt(user.Email));
+                        log.Error("Failed to update Discourse for user '{0}'. - {1}".Fmt(user.Email, e.Message));
                     }
                 }
             });
