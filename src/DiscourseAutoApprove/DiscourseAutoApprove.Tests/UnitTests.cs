@@ -87,6 +87,12 @@ namespace DiscourseAutoApprove.Tests
             Assert.That(discourseClient != null);
             Assert.That(discourseClient.ApproveCalledCount > 0);
         }
+
+        [Test]
+        public void TestSyncAllUsers()
+        {
+            
+        }
     }
 
     public class MockServiceStackAccountClient : IServiceStackAccountClient
@@ -105,6 +111,7 @@ namespace DiscourseAutoApprove.Tests
     public class MockDiscourseClient : IDiscourseClient
     {
         public int ApproveCalledCount { get; set; }
+        public int SuspendCalledCount { get; set; }
         public void Login(string userName, string pass)
         {
             throw new NotImplementedException();
@@ -131,15 +138,15 @@ namespace DiscourseAutoApprove.Tests
             return new AdminApproveUserResponse();
         }
 
+        public AdminSuspendUserResponse AdminSuspendUser(int userId, int days, string reasonGiven)
+        {
+            throw new NotImplementedException();
+        }
+
         public Task<AdminApproveUserResponse> AdminApproveUserAsync(int userId)
         {
             ApproveCalledCount++;
             return new Task<AdminApproveUserResponse>(() => new AdminApproveUserResponse());
-        }
-
-        public AdminUpdateUserResponse AdminUpdateUserBlockedStatus(string userName, bool blocked)
-        {
-            throw new NotImplementedException();
         }
 
         public ReplyToPostResponse CreateReply(int category, int topicId, int? postId, string content)
@@ -158,6 +165,11 @@ namespace DiscourseAutoApprove.Tests
         }
 
         public GetLatestTopicsResponse GetTopics()
+        {
+            throw new NotImplementedException();
+        }
+
+        public AdminGetUsersWithEmailResponse AdminGetUsers()
         {
             throw new NotImplementedException();
         }

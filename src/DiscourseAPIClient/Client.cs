@@ -19,11 +19,12 @@ namespace DiscourseAPIClient
         GetCategoryResponse GetCategory(int id);
         CreateCategoryResponse CreateCategory(string name, string color, string textColor);
         AdminApproveUserResponse AdminApproveUser(int userId);
-        AdminUpdateUserResponse AdminUpdateUserBlockedStatus(string userName, bool blocked);
+        AdminSuspendUserResponse AdminSuspendUser(int userId, int days, string reasonGiven);
         ReplyToPostResponse CreateReply(int category, int topicId, int? postId, string content);
         CreatePostResponse CreateTopic(int categoryId, string title, string content);
         GetTopicResponse GetTopic(int id);
         GetLatestTopicsResponse GetTopics();
+        AdminGetUsersWithEmailResponse AdminGetUsers();
     }
 
     public class DiscourseClient : IDiscourseClient
@@ -124,6 +125,18 @@ namespace DiscourseAPIClient
             }
         }
 
+        public AdminGetUsersWithEmailResponse AdminGetUsers()
+        {
+            using (JsConfig
+                .With(propertyConvention: PropertyConvention.Lenient,
+                    emitLowercaseUnderscoreNames: true,
+                    emitCamelCaseNames: false))
+            {
+                var request = new AdminGetUsersWithEmail();
+                return client.Get(request);
+            }
+        }
+
         public GetTopicResponse GetTopic(int id)
         {
             using (JsConfig
@@ -174,21 +187,6 @@ namespace DiscourseAPIClient
             }
         }
 
-        public AdminUpdateUserResponse AdminUpdateUserBlockedStatus(string userName, bool blocked)
-        {
-            using (JsConfig
-                .With(propertyConvention: PropertyConvention.Lenient,
-                    emitLowercaseUnderscoreNames: true,
-                    emitCamelCaseNames: false))
-            {
-                var request = new AdminUpdateUser { Username = userName, Blocked = blocked };
-                var requestUrl = request.ToPutUrl()
-                    .AddQueryParam("api_key", ApiKey).AddQueryParam("api_username", UserName);
-                requestUrl = client.BaseUri.Substring(0, client.BaseUri.Length - 1) + requestUrl;
-                return client.Post<AdminUpdateUserResponse>(requestUrl, request);
-            }
-        }
-
         /// <summary>
         /// Requires Login method to be used as not an normal API call
         /// </summary>
@@ -219,6 +217,38 @@ namespace DiscourseAPIClient
             }
         }
 
+        /// <summary>
+        /// Requires Login method to be used as not an normal API call
+        /// </summary>
+        /// <param name="userId"></param>
+        /// <param name="days"></param>
+        /// <param name="reasonGiven"></param>
+        /// <returns></returns>
+        public AdminSuspendUserResponse AdminSuspendUser(int userId, int days, string reasonGiven)
+        {
+            using (JsConfig
+                .With(propertyConvention: PropertyConvention.Lenient,
+                    emitLowercaseUnderscoreNames: true,
+                    emitCamelCaseNames: false))
+            {
+                var request = new AdminSuspendUser { UserId = userId };
+                var requestUrl = request.ToPutUrl()
+                    .AddQueryParam("api_key", ApiKey).AddQueryParam("api_username", UserName);
+                requestUrl = client.BaseUri.Substring(0, client.BaseUri.Length - 1) + requestUrl;
+                var res = requestUrl.PutToUrl(new { duration = days, reason = reasonGiven }, "*/*", (webReq) =>
+                {
+                    webReq.ContentType = "application/x-www-form-urlencoded; charset=UTF-8";
+                    webReq.Headers.Add("X-CSRF-Token", csrf);
+                    webReq.Headers.Add("X-Request-With", "XMLHttpRequest");
+                    webReq.CookieContainer = client.CookieContainer;
+                }, (webRes) =>
+                {
+                    client.CookieContainer.Add(webRes.Cookies);
+                });
+                return JsonSerializer.DeserializeFromString<AdminSuspendUserResponse>(res);
+            }
+        }
+
         public CreateCategoryResponse CreateCategory(string name, string color, string textColor)
         {
             using (JsConfig
@@ -236,10 +266,6 @@ namespace DiscourseAPIClient
         }
     }
 
-    public class AdminUpdateUserResponse
-    {
-
-    }
 
     [Route("/users/{Username}", "PUT")]
     public class AdminUpdateUser
@@ -272,6 +298,17 @@ namespace DiscourseAPIClient
         public int TopicId { get; set; }
     }
 
+    [Route("/admin/users.json?show_emails=true", "GET")]
+    public class AdminGetUsersWithEmail : IReturn<AdminGetUsersWithEmailResponse>
+    {
+        
+    }
+
+    public class AdminGetUsersWithEmailResponse : List<DiscourseUser>
+    {
+
+    }
+
     [Route("/posts", "POST")]
     public class CreateTopic : IReturn<CreatePostResponse>
     {
@@ -291,6 +328,12 @@ namespace DiscourseAPIClient
 
     [Route("/admin/users/{UserId}/approve", "PUT")]
     public class AdminApproveUser : IReturn<AdminApproveUserResponse>
+    {
+        public int UserId { get; set; }
+    }
+
+    [Route("/admin/users/{UserId}/suspend", "PUT")]
+    public class AdminSuspendUser : IReturn<AdminSuspendUserResponse>
     {
         public int UserId { get; set; }
     }

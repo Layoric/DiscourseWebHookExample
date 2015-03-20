@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 using DiscourseAPIClient;
+using DiscourseAPIClient.Types;
 using DiscourseAutoApprove.ServiceModel;
 using ServiceStack;
 using ServiceStack.Configuration;
@@ -29,13 +30,53 @@ namespace DiscourseAutoApprove.ServiceInterface
             };
         }
 
-        public object Post(UserCreatedDiscourseWebHook req)
+        public object Any(SyncServiceStackCustomers request)
+        {
+            return Task.Factory.StartNew(() =>
+            {
+                var users = DiscourseClient.AdminGetUsers();
+                // space discourse requests 3 seconds a part (avoid Discourse rate limiting errors). 
+                // Sync process will take (number of users * 3 + delay to get subscription) seconds.
+                // Eg, 160 users will take ~10 mins but response to webhook request should only take ~30-60 seconds depending on user subscription service.
+                // Since it's a long running task, might be nice to hook it up to a dashboard with Server Side Events
+                int spaceDiscourseRequestsCount = 0;
+                foreach (var user in users)
+                {
+                    spaceDiscourseRequestsCount += 3;
+                    var existingCustomerSubscription = ServiceStackAccountClient.GetUserSubscription(user.Email);
+                    if (UserNeedsApproval(user) && UserHasValidSubscription(existingCustomerSubscription))
+                    {
+                        ApproveUserAsync(user, spaceDiscourseRequestsCount);
+                    }
+
+                    if (!UserNeedsApproval(user) && !UserHasValidSubscription(existingCustomerSubscription))
+                    {
+                        SuspendUserAsync(user, spaceDiscourseRequestsCount);
+                    }
+                }
+            });
+        }
+
+        private bool UserNeedsApproval(DiscourseUser user)
+        {
+            return !user.Approved;
+        }
+
+        private bool UserHasValidSubscription(UserServiceResponse serviceStackAccount)
+        {
+            return
+                serviceStackAccount != null &&
+                serviceStackAccount.Expiry != null &&
+                serviceStackAccount.Expiry > DateTime.Now;
+        }
+
+        public object Post(UserCreatedDiscourseWebHook request)
         {
             return Task.Factory.StartNew(() =>
             {
                 ILog log = LogManager.GetLogger(GetType());
 
-                var rawString = req.RequestStream.ToUtf8String();
+                var rawString = request.RequestStream.ToUtf8String();
                 log.Info("User registered hook fired. \r\n\r\n" + rawString);
                 string apiKey = GetApiKeyFromRequest(rawString);
                 if (AppSettings.Get("DiscourseApiKey", "") != apiKey)
@@ -53,7 +94,7 @@ namespace DiscourseAutoApprove.ServiceInterface
                     log.Info("User {0} with email {1} did have a valid subscription. Approving.".Fmt(discourseUser.Id, discourseUser.Email));
                     try
                     {
-                        ApproveUser(discourseUser);
+                        ApproveUserAsync(discourseUser, 10);
                     }
                     catch (Exception e)
                     {
@@ -68,10 +109,10 @@ namespace DiscourseAutoApprove.ServiceInterface
             });
         }
 
-        private async void ApproveUser(DiscourseUser discourseUser)
+        private async void ApproveUserAsync(DiscourseUser discourseUser, int delay)
         {
             //Wait 10 seconds for the user to be created
-            await Task.Delay(TimeSpan.FromSeconds(10));
+            await Task.Delay(TimeSpan.FromSeconds(delay));
             try
             {
                 DiscourseClient.AdminApproveUser(discourseUser.Id);
@@ -81,6 +122,35 @@ namespace DiscourseAutoApprove.ServiceInterface
                 //Try to login again and retry
                 DiscourseClient.Login(AppSettings.Get("DiscourseAdminUserName", ""), AppSettings.Get("DiscourseAdminPassword", ""));
                 DiscourseClient.AdminApproveUser(discourseUser.Id);
+            }
+        }
+
+        private void ApproveUser(DiscourseUser discourseUser)
+        {
+            try
+            {
+                DiscourseClient.AdminApproveUser(discourseUser.Id);
+            }
+            catch (Exception)
+            {
+                //Try to login again and retry
+                DiscourseClient.Login(AppSettings.Get("DiscourseAdminUserName", ""), AppSettings.Get("DiscourseAdminPassword", ""));
+                DiscourseClient.AdminApproveUser(discourseUser.Id);
+            }
+        }
+
+        private async void SuspendUserAsync(DiscourseUser user, int delay)
+        {
+            await Task.Delay(TimeSpan.FromSeconds(delay));
+            try
+            {
+                DiscourseClient.AdminSuspendUser(user.Id, 365, AppSettings.GetString("DiscourseSuspensionReason"));
+            }
+            catch (Exception)
+            {
+                //Try to login again and retry
+                DiscourseClient.Login(AppSettings.Get("DiscourseAdminUserName", ""), AppSettings.Get("DiscourseAdminPassword", ""));
+                DiscourseClient.AdminSuspendUser(user.Id, 365, AppSettings.GetString("DiscourseSuspensionReason"));
             }
         }
 
