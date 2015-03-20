@@ -24,6 +24,6 @@ namespace DiscourseAutoApprove.ServiceModel
     [Route("/sync")]
     public class SyncServiceStackCustomers
     {
-        
+        public int? StaggerRequestsBy { get; set; }
     }
 }

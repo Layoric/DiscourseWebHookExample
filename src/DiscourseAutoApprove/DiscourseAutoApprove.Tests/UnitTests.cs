@@ -93,12 +93,14 @@ namespace DiscourseAutoApprove.Tests
         {
             var service = appHost.Container.Resolve<MyServices>();
 
-            var req = new SyncServiceStackCustomers();
+            var req = new SyncServiceStackCustomers {StaggerRequestsBy = 0};
             var response = service.Any(req) as Task;
             response.Wait();
             var discourseClient = appHost.Resolve<IDiscourseClient>() as MockDiscourseClient;
             Assert.That(discourseClient != null);
-            Assert.That(discourseClient.ApproveCalledCount > 0);
+            Assert.That(discourseClient.ApproveCalledCount == 1);
+            Assert.That(discourseClient.SuspendCalledCount == 1);
+            Assert.That(discourseClient.UnsuspendCalledCount == 1);
         }
     }
 
@@ -119,6 +121,7 @@ namespace DiscourseAutoApprove.Tests
     {
         public int ApproveCalledCount { get; set; }
         public int SuspendCalledCount { get; set; }
+        public int UnsuspendCalledCount { get; set; }
         public void Login(string userName, string pass)
         {
             throw new NotImplementedException();
@@ -147,12 +150,14 @@ namespace DiscourseAutoApprove.Tests
 
         public AdminSuspendUserResponse AdminSuspendUser(int userId, int days, string reasonGiven)
         {
-            throw new NotImplementedException();
+            SuspendCalledCount++;
+            return new AdminSuspendUserResponse();
         }
 
         public AdminUnsuspendUserResponse AdminUnsuspendUser(int userId)
         {
-            throw new NotImplementedException();
+            UnsuspendCalledCount++;
+            return new AdminUnsuspendUserResponse();
         }
 
         public Task<AdminApproveUserResponse> AdminApproveUserAsync(int userId)

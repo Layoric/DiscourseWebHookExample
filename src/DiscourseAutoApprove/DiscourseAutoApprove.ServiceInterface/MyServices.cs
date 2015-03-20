@@ -35,14 +35,15 @@ namespace DiscourseAutoApprove.ServiceInterface
             return Task.Factory.StartNew(() =>
             {
                 var users = DiscourseClient.AdminGetUsers();
-                // space discourse requests 3 seconds a part (avoid Discourse rate limiting errors). 
-                // Sync process will take (number of users * 3 + delay to get subscription) seconds.
-                // Eg, 160 users will take ~10 mins but response to webhook request should only take ~30-60 seconds depending on user subscription service.
+                // space discourse requests 2 seconds a part (avoid Discourse rate limiting errors). 
+                // Sync process will take (number of users * 2 + delay to get subscription) seconds.
+                // Eg, 160 users will take ~7 mins but response to webhook request should only take ~30-60 seconds depending on user subscription service.
                 // Since it's a long running task, might be nice to hook it up to a dashboard with Server Side Events
                 int spaceDiscourseRequestsCount = 0;
+                int interval = request.StaggerRequestsBy ?? 2;
                 foreach (var user in users)
                 {
-                    spaceDiscourseRequestsCount += 3;
+                    spaceDiscourseRequestsCount += interval;
                     var existingCustomerSubscription = ServiceStackAccountClient.GetUserSubscription(user.Email);
                     if (UserNeedsApproval(user) && UserHasValidSubscription(existingCustomerSubscription))
                     {
