@@ -1,12 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Collections.Generic;
 using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 using DiscourseAPIClient.Types;
 using ServiceStack;
-using ServiceStack.Logging;
 using ServiceStack.Text;
 
 namespace DiscourseAPIClient
@@ -423,8 +419,8 @@ namespace DiscourseAPIClient
 
         public static string RemoveAccent(this string txt)
         {
-            byte[] bytes = System.Text.Encoding.GetEncoding("Cyrillic").GetBytes(txt);
-            return System.Text.Encoding.ASCII.GetString(bytes);
+            byte[] bytes = Encoding.GetEncoding("Cyrillic").GetBytes(txt);
+            return Encoding.ASCII.GetString(bytes);
         }
     }
 }

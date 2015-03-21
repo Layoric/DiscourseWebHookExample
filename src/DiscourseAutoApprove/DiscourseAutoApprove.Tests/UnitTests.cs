@@ -34,8 +34,7 @@ namespace DiscourseAutoApprove.Tests
 
         public void SeedAppSettings(ServiceStackHost basicAppHost)
         {
-            //Current bug with JsonArrayObjects parsing drops first character from string if first object in the array is not an object but a string 
-            basicAppHost.AppSettings.Set("DiscourseApiKey", "testapikey");
+            basicAppHost.AppSettings.Set("DiscourseApiKey", "_testapikey");
         }
 
         public void ConfigureAppHost(Container container)
@@ -44,6 +43,15 @@ namespace DiscourseAutoApprove.Tests
             container.Register(appHost.AppSettings);
             container.Register<IDiscourseClient>(new MockDiscourseClient());
             container.Register<IServiceStackAccountClient>(new MockServiceStackAccountClient());
+        }
+
+        [SetUp]
+        public void Setup()
+        {
+            var discourseClient = appHost.Container.Resolve<IDiscourseClient>() as MockDiscourseClient;
+            discourseClient.ApproveCalledCount = 0;
+            discourseClient.SuspendCalledCount = 0;
+            discourseClient.UnsuspendCalledCount = 0;
         }
 
         [TestFixtureTearDown]
@@ -68,8 +76,7 @@ namespace DiscourseAutoApprove.Tests
             var service = appHost.Container.Resolve<MyServices>();
 
             var req = new UserCreatedDiscourseWebHook {RequestStream = new MemoryStream(invalidEmailInput.ToUtf8Bytes())};
-            var response = service.Post(req) as Task;
-            response.Wait();
+            service.Post(req);
             var discourseClient = appHost.Resolve<IDiscourseClient>() as MockDiscourseClient;
             Assert.That(discourseClient != null);
             Assert.That(discourseClient.ApproveCalledCount == 0);
@@ -81,8 +88,7 @@ namespace DiscourseAutoApprove.Tests
             var service = appHost.Container.Resolve<MyServices>();
 
             var req = new UserCreatedDiscourseWebHook { RequestStream = new MemoryStream(validEmailInput.ToUtf8Bytes()) };
-            var response = service.Post(req) as Task;
-            response.Wait();
+            service.Post(req);
             var discourseClient = appHost.Resolve<IDiscourseClient>() as MockDiscourseClient;
             Assert.That(discourseClient != null);
             Assert.That(discourseClient.ApproveCalledCount > 0);
@@ -93,9 +99,8 @@ namespace DiscourseAutoApprove.Tests
         {
             var service = appHost.Container.Resolve<MyServices>();
 
-            var req = new SyncServiceStackCustomers {StaggerRequestsBy = 0};
-            var response = service.Any(req) as Task;
-            response.Wait();
+            var req = new SyncServiceStackCustomers();
+            service.Any(req);
             var discourseClient = appHost.Resolve<IDiscourseClient>() as MockDiscourseClient;
             Assert.That(discourseClient != null);
             Assert.That(discourseClient.ApproveCalledCount == 1);
@@ -158,12 +163,6 @@ namespace DiscourseAutoApprove.Tests
         {
             UnsuspendCalledCount++;
             return new AdminUnsuspendUserResponse();
-        }
-
-        public Task<AdminApproveUserResponse> AdminApproveUserAsync(int userId)
-        {
-            ApproveCalledCount++;
-            return new Task<AdminApproveUserResponse>(() => new AdminApproveUserResponse());
         }
 
         public ReplyToPostResponse CreateReply(int category, int topicId, int? postId, string content)
