@@ -22,7 +22,7 @@ namespace DiscourseAutoApprove.Tests
 
         public UnitTests()
         {
-            appHost = new BasicAppHost(typeof(MyServices).Assembly)
+            appHost = new BasicAppHost(typeof(SyncAccountServices).Assembly)
             {
                 ConfigureContainer = ConfigureAppHost
             };
@@ -64,7 +64,7 @@ namespace DiscourseAutoApprove.Tests
         [Test]
         public void TestMethod1()
         {
-            var service = appHost.Container.Resolve<MyServices>();
+            var service = appHost.Container.Resolve<SyncAccountServices>();
 
             var response = (HelloResponse)service.Any(new Hello { Name = "World" });
 
@@ -72,9 +72,9 @@ namespace DiscourseAutoApprove.Tests
         }
 
         [Test]
-        public void TestUserWithoutSubscription()
+        public void TestWebHookWithoutAccount()
         {
-            var service = appHost.Container.Resolve<MyServices>();
+            var service = appHost.Container.Resolve<WebHookServices>();
 
             var req = new UserCreatedDiscourseWebHook {RequestStream = new MemoryStream(invalidEmailInput.ToUtf8Bytes())};
             service.Post(req);
@@ -85,9 +85,9 @@ namespace DiscourseAutoApprove.Tests
         }
 
         [Test]
-        public void TestUserWithSubscription()
+        public void TestWebHookWithAccount()
         {
-            var service = appHost.Container.Resolve<MyServices>();
+            var service = appHost.Container.Resolve<WebHookServices>();
 
             var req = new UserCreatedDiscourseWebHook { RequestStream = new MemoryStream(validEmailInput.ToUtf8Bytes()) };
             service.Post(req);
@@ -98,17 +98,39 @@ namespace DiscourseAutoApprove.Tests
         }
 
         [Test]
-        public void TestSyncAllUsers()
+        public void TestSyncNewUsers()
         {
-            var service = appHost.Container.Resolve<MyServices>();
+            var service = appHost.Container.Resolve<SyncAccountServices>();
 
             var req = new SyncServiceStackCustomers();
             service.Any(req);
             var discourseClient = appHost.Resolve<IDiscourseClient>() as MockDiscourseClient;
             Assert.That(discourseClient != null);
             Assert.That(discourseClient.ApproveCalledCount == 1);
-            Assert.That(discourseClient.SuspendCalledCount == 1);
+        }
+
+        [Test]
+        public void TestSyncRenewAccount()
+        {
+            var service = appHost.Container.Resolve<HourlyServices>();
+
+            var req = new SyncAccountsHourly();
+            service.Any(req);
+            var discourseClient = appHost.Resolve<IDiscourseClient>() as MockDiscourseClient;
+            Assert.That(discourseClient != null);
             Assert.That(discourseClient.UnsuspendCalledCount == 1);
+        }
+
+        [Test]
+        public void TestSyncExpiredAccount()
+        {
+            var service = appHost.Container.Resolve<DailyServices>();
+
+            var req = new SyncAccountsDaily();
+            service.Any(req);
+            var discourseClient = appHost.Resolve<IDiscourseClient>() as MockDiscourseClient;
+            Assert.That(discourseClient != null);
+            Assert.That(discourseClient.SuspendCalledCount == 1);
         }
     }
 

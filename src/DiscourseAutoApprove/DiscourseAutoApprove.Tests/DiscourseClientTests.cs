@@ -23,7 +23,7 @@ namespace DiscourseAutoApprove.Tests
 
         public DiscourseClientTests()
         {
-            appHost = new BasicAppHost(typeof(MyServices).Assembly)
+            appHost = new BasicAppHost(typeof(SyncAccountServices).Assembly)
             {
                 ConfigureContainer = ConfigureAppHost
             };

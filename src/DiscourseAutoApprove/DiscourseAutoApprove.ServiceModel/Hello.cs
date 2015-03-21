@@ -22,7 +22,19 @@ namespace DiscourseAutoApprove.ServiceModel
     }
 
     [Route("/sync")]
-    public class SyncServiceStackCustomers
+    public class SyncServiceStackCustomers : IReturnVoid
     {
+    }
+
+    [Route("/daily")]
+    public class SyncAccountsDaily : IReturnVoid
+    {
+        
+    }
+
+    [Route("/hourly")]
+    public class SyncAccountsHourly : IReturnVoid
+    {
+
     }
 }

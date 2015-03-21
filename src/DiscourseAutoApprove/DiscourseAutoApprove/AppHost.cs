@@ -17,7 +17,7 @@ namespace DiscourseAutoApprove
         /// Base constructor requires a name and assembly to locate web service classes. 
         /// </summary>
         public AppHost()
-            : base("DiscourseAutoApprove", typeof(MyServices).Assembly)
+            : base("DiscourseAutoApprove", typeof(SyncAccountServices).Assembly)
         {
             var customSettings = new FileInfo(@"~/appsettings.txt".MapHostAbsolutePath());
             AppSettings = customSettings.Exists
@@ -44,7 +44,7 @@ namespace DiscourseAutoApprove
 
             LogManager.LogFactory = new EventLogFactory("DiscourseAutoApprover","Application");
 
-            this.Plugins.Add(new RazorFormat());
+            Plugins.Add(new RazorFormat());
             container.Register(AppSettings);
 
             var client = new DiscourseClient(
