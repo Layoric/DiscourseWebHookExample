@@ -42,6 +42,7 @@ namespace DiscourseAPIClient
             ApiKey = apiKey;
             UserName = userName;
             client = new JsonServiceClient(url);
+            client.Get(url.AppendPath("top.json").AddQueryParam("api_key", apiKey).AddQueryParam("api_username", userName));
         }
 
         [Route("/session")]
@@ -134,7 +135,20 @@ namespace DiscourseAPIClient
                     emitCamelCaseNames: false))
             {
                 var request = new AdminGetUsersWithEmail();
-                return client.Get(request);
+                var requestUrl = request.ToGetUrl()
+                    .AddQueryParam("api_key", ApiKey).AddQueryParam("api_username", UserName);
+                requestUrl = client.BaseUri.Substring(0, client.BaseUri.Length - 1) + requestUrl;
+                var res = requestUrl.GetJsonFromUrl((webReq) =>
+                {
+                    webReq.ContentType = "application/x-www-form-urlencoded; charset=UTF-8";
+                    webReq.Headers.Add("X-CSRF-Token", csrf);
+                    webReq.Headers.Add("X-Request-With", "XMLHttpRequest");
+                    webReq.CookieContainer = client.CookieContainer;
+                }, (webRes) =>
+                {
+                    client.CookieContainer.Add(webRes.Cookies);
+                });
+                return JsonSerializer.DeserializeFromString<AdminGetUsersWithEmailResponse>(res);
             }
         }
 

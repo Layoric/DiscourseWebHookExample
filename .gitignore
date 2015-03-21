@@ -163,6 +163,7 @@ deploy/
 webdeploy.zip
 wwwroot/
 App_Data/
+appsettings.txt
 
 # RIA/Silverlight projects
 Generated_Code/
@@ -186,3 +187,4 @@ UpgradeLog*.htm
 
 # Microsoft Fakes
 FakesAssemblies/
+src/DiscourseAutoApprove/DiscourseAutoApprove.Tests/appsettings.txt
