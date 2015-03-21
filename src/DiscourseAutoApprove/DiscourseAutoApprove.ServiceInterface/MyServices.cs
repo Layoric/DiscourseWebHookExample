@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 using System.Threading;
 using System.Threading.Tasks;
 using DiscourseAPIClient;
@@ -123,21 +124,31 @@ namespace DiscourseAutoApprove.ServiceInterface
                 existingCustomerSubscription.Expiry > DateTime.Now)
             {
                 log.Info("User {0} with email {1} did have a valid subscription. Approving.".Fmt(discourseUser.Id, discourseUser.Email));
-                try
-                {
-                    Thread.Sleep(3000);
-                    ApproveUser(discourseUser);
-                }
-                catch (Exception e)
-                {
-                    log.Error("Error approving user {0} \r\n\r\n {1}".Fmt(discourseUser.Email, e.Message));
-                }
+                ThreadPool.QueueUserWorkItem(BackgroundApprove, discourseUser);
             }
             else
             {
                 log.Info("User {0} with email {1} did not have a valid subscription".Fmt(discourseUser.Id, discourseUser.Email));
             }
             return null;
+        }
+
+        private void BackgroundApprove(object user)
+        {
+            Thread.Sleep(3000);
+            var discourseUser = user as DiscourseUser;
+            
+            try
+            {
+                ApproveUser(discourseUser);
+            }
+            catch (Exception e)
+            {
+                ILog log = LogManager.GetLogger(GetType());
+                log.Error(discourseUser != null
+                    ? "Error approving user {0} \r\n\r\n {1}".Fmt(discourseUser.Email, e.Message)
+                    : "Error approving user {0} \r\n\r\n Discourse user null");
+            }
         }
 
         private void ApproveUser(DiscourseUser discourseUser)

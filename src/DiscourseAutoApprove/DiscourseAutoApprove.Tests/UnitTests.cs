@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Threading;
 using System.Threading.Tasks;
 using DiscourseAPIClient;
 using DiscourseAPIClient.Types;
@@ -77,6 +78,7 @@ namespace DiscourseAutoApprove.Tests
 
             var req = new UserCreatedDiscourseWebHook {RequestStream = new MemoryStream(invalidEmailInput.ToUtf8Bytes())};
             service.Post(req);
+            Thread.Sleep(3200);
             var discourseClient = appHost.Resolve<IDiscourseClient>() as MockDiscourseClient;
             Assert.That(discourseClient != null);
             Assert.That(discourseClient.ApproveCalledCount == 0);
@@ -89,6 +91,7 @@ namespace DiscourseAutoApprove.Tests
 
             var req = new UserCreatedDiscourseWebHook { RequestStream = new MemoryStream(validEmailInput.ToUtf8Bytes()) };
             service.Post(req);
+            Thread.Sleep(3200);
             var discourseClient = appHost.Resolve<IDiscourseClient>() as MockDiscourseClient;
             Assert.That(discourseClient != null);
             Assert.That(discourseClient.ApproveCalledCount > 0);
