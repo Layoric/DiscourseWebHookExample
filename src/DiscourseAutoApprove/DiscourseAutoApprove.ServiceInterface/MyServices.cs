@@ -14,6 +14,8 @@ namespace DiscourseAutoApprove.ServiceInterface
 {
     public class MyServices : Service
     {
+        private static ILog log = LogManager.GetLogger(typeof(MyServices));
+
         public IAppSettings AppSettings { get; set; }
         public IDiscourseClient DiscourseClient { get; set; }
         public IServiceStackAccountClient ServiceStackAccountClient { get; set; }
@@ -34,61 +36,60 @@ namespace DiscourseAutoApprove.ServiceInterface
 
         public object Any(SyncServiceStackCustomers request)
         {
-                var log = LogManager.GetLogger(GetType());
-                var users = DiscourseClient.AdminGetUsers();
-                foreach (var user in users)
+            var users = DiscourseClient.AdminGetUsers();
+            foreach (var user in users)
+            {
+                //Don't process discourse administrators
+                if (user.Admin)
                 {
-                    //Don't process discourse administrators
-                    if (user.Admin)
-                    {
-                        continue;
-                    }
+                    continue;
+                }
 
-                    UserServiceResponse existingCustomerSubscription;
+                UserServiceResponse existingCustomerSubscription;
+                try
+                {
+                    existingCustomerSubscription = ServiceStackAccountClient.GetUserSubscription(user.Email);
+                }
+                catch (Exception e)
+                {
+                    log.Error("Failed to check user's subscription. Retrying... - {0}".Fmt(e.Message));
                     try
                     {
                         existingCustomerSubscription = ServiceStackAccountClient.GetUserSubscription(user.Email);
                     }
-                    catch (Exception e)
+                    catch (Exception ex)
                     {
-                        log.Error("Failed to check user's subscription. Retrying... - {0}".Fmt(e.Message));
-                        try
-                        {
-                            existingCustomerSubscription = ServiceStackAccountClient.GetUserSubscription(user.Email);
-                        }
-                        catch (Exception ex)
-                        {
-                            log.Error("Failed to check user's subscription. Cancelling sync. - {0}".Fmt(ex.Message));
-                            break;
-                        }
-                    }
-
-                    try
-                    {
-                        Thread.Sleep(2000);
-                        if (UserNeedsApproval(user) && UserHasValidSubscription(existingCustomerSubscription))
-                        {
-                            log.Info("Approving user '{0}'.".Fmt(user.Email));
-                            ApproveUser(user);
-                        }
-
-                        if (!UserNeedsApproval(user) && !UserHasValidSubscription(existingCustomerSubscription))
-                        {
-                            log.Info("Suspending user '{0}'.".Fmt(user.Email));
-                            SuspendUser(user);
-                        }
-
-                        if (!UserNeedsApproval(user) && user.Suspended == true)
-                        {
-                            log.Info("Unsuspending user '{0}'.".Fmt(user.Email));
-                            UnsuspendUser(user);
-                        }
-                    }
-                    catch (Exception e)
-                    {
-                        log.Error("Failed to update Discourse for user '{0}'. - {1}".Fmt(user.Email, e.Message));
+                        log.Error("Failed to check user's subscription. Cancelling sync. - {0}".Fmt(ex.Message));
+                        break;
                     }
                 }
+
+                try
+                {
+                    Thread.Sleep(2000);
+                    if (UserNeedsApproval(user) && UserHasValidSubscription(existingCustomerSubscription))
+                    {
+                        log.Info("Approving user '{0}'.".Fmt(user.Email));
+                        ApproveUser(user);
+                    }
+
+                    if (!UserNeedsApproval(user) && !UserHasValidSubscription(existingCustomerSubscription))
+                    {
+                        log.Info("Suspending user '{0}'.".Fmt(user.Email));
+                        SuspendUser(user);
+                    }
+
+                    if (!UserNeedsApproval(user) && user.Suspended == true)
+                    {
+                        log.Info("Unsuspending user '{0}'.".Fmt(user.Email));
+                        UnsuspendUser(user);
+                    }
+                }
+                catch (Exception e)
+                {
+                    log.Error("Failed to update Discourse for user '{0}'. - {1}".Fmt(user.Email, e.Message));
+                }
+            }
             return null;
         }
 
@@ -107,8 +108,6 @@ namespace DiscourseAutoApprove.ServiceInterface
 
         public object Post(UserCreatedDiscourseWebHook request)
         {
-            ILog log = LogManager.GetLogger(GetType());
-
             var rawString = request.RequestStream.ToUtf8String();
             log.Info("User registered hook fired. \r\n\r\n" + rawString);
             string apiKey = GetApiKeyFromRequest(rawString);
@@ -137,14 +136,13 @@ namespace DiscourseAutoApprove.ServiceInterface
         {
             Thread.Sleep(3000);
             var discourseUser = user as DiscourseUser;
-            
+
             try
             {
                 ApproveUser(discourseUser);
             }
             catch (Exception e)
             {
-                ILog log = LogManager.GetLogger(GetType());
                 log.Error(discourseUser != null
                     ? "Error approving user {0} \r\n\r\n {1}".Fmt(discourseUser.Email, e.Message)
                     : "Error approving user {0} \r\n\r\n Discourse user null");
@@ -227,6 +225,8 @@ namespace DiscourseAutoApprove.ServiceInterface
 
     public class ServiceStackAccountClient : IServiceStackAccountClient
     {
+        private static ILog log = LogManager.GetLogger(typeof(ServiceStackAccountClient));
+
         private readonly string serviceUrl;
         public ServiceStackAccountClient(string url)
         {
@@ -238,12 +238,11 @@ namespace DiscourseAutoApprove.ServiceInterface
             UserServiceResponse result = null;
             try
             {
-                result = JsonSerializer.DeserializeFromString<UserServiceResponse>(
-                                serviceUrl.Fmt(emailAddress).GetJsonFromUrl());
+                result = serviceUrl.Fmt(emailAddress).GetJsonFromUrl()
+                    .FromJson<UserServiceResponse>();
             }
             catch (Exception e)
             {
-                ILog log = LogManager.GetLogger(GetType());
                 log.Error(e.Message);
             }
 
