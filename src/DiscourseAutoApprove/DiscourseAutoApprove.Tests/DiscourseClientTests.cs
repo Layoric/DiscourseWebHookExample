@@ -60,16 +60,16 @@ namespace DiscourseAutoApprove.Tests
         public void TestSuspendAndUnsuspendUser()
         {
             var discourseClient = appHost.Resolve<IDiscourseClient>();
-            discourseClient.AdminSuspendUser(8, 1, "This is a test");
+            discourseClient.AdminSuspendUser(12, 1, "This is a test");
             var testUser = discourseClient.AdminGetUsers().Where(x => x.Username == "testuser").FirstNonDefault();
             Assert.That(testUser != null);
-            Assert.That(testUser.Id == 8);
+            Assert.That(testUser.Id == 12);
             Assert.That(testUser.Suspended == true);
 
-            discourseClient.AdminUnsuspendUser(8);
+            discourseClient.AdminUnsuspendUser(12);
             testUser = discourseClient.AdminGetUsers().Where(x => x.Username == "testuser").FirstNonDefault();
             Assert.That(testUser != null);
-            Assert.That(testUser.Id == 8);
+            Assert.That(testUser.Id == 12);
             Assert.That(testUser.Suspended == null || testUser.Suspended == false);
         }
 
@@ -79,7 +79,7 @@ namespace DiscourseAutoApprove.Tests
             var discourseClient = appHost.Resolve<IDiscourseClient>();
             var testUser = discourseClient.AdminGetUsers().Where(x => x.Username == "testuser").FirstNonDefault();
             Assert.That(testUser != null);
-            Assert.That(testUser.Id == 8);
+            Assert.That(testUser.Id == 12);
         }
     }
 }

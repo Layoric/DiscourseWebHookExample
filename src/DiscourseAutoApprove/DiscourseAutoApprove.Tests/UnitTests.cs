@@ -210,7 +210,7 @@ namespace DiscourseAutoApprove.Tests
             throw new NotImplementedException();
         }
 
-        public AdminGetUsersWithEmailResponse AdminGetUsers()
+        public AdminGetUsersWithEmailResponse AdminGetUsers(int limit = 100)
         {
             var result = new AdminGetUsersWithEmailResponse();
             result.Add(new DiscourseUser { Email = "test1@test.com", Approved = true}); // Do nothing

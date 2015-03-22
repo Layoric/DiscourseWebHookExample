@@ -21,7 +21,7 @@ namespace DiscourseAPIClient
         CreatePostResponse CreateTopic(int categoryId, string title, string content);
         GetTopicResponse GetTopic(int id);
         GetLatestTopicsResponse GetTopics();
-        AdminGetUsersWithEmailResponse AdminGetUsers();
+        AdminGetUsersWithEmailResponse AdminGetUsers(int limit = 100);
     }
 
     public class DiscourseClient : IDiscourseClient
@@ -123,14 +123,14 @@ namespace DiscourseAPIClient
             }
         }
 
-        public AdminGetUsersWithEmailResponse AdminGetUsers()
+        public AdminGetUsersWithEmailResponse AdminGetUsers(int limit = 100)
         {
             using (JsConfig
                 .With(propertyConvention: PropertyConvention.Lenient,
                     emitLowercaseUnderscoreNames: true,
                     emitCamelCaseNames: false))
             {
-                var request = new AdminGetUsersWithEmail();
+                var request = new AdminGetUsersWithEmail { limit = limit };
                 var requestUrl = request.ToGetUrl()
                     .AddQueryParam("api_key", ApiKey).AddQueryParam("api_username", UserName);
                 requestUrl = client.BaseUri.Substring(0, client.BaseUri.Length - 1) + requestUrl;
@@ -342,7 +342,7 @@ namespace DiscourseAPIClient
     [Route("/admin/users.json?show_emails=true", "GET")]
     public class AdminGetUsersWithEmail : IReturn<AdminGetUsersWithEmailResponse>
     {
-        
+        public int limit { get; set; }
     }
 
     public class AdminGetUsersWithEmailResponse : List<DiscourseUser>

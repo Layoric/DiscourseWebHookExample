@@ -19,7 +19,7 @@ namespace DiscourseAutoApprove.ServiceInterface
 
         public object Any(SyncServiceStackCustomers request)
         {
-            var users = DiscourseClient.AdminGetUsers();
+            var users = DiscourseClient.AdminGetUsers(1000);
             foreach (var discourseUser in users)
             {
                 //Don't process discourse administrators
