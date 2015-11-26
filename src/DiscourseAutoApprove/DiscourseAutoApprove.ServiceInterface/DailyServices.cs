@@ -65,7 +65,7 @@ namespace DiscourseAutoApprove.ServiceInterface
                 }
                 catch (Exception e)
                 {
-                    Log.Error("Failed to unsuspend Discourse for user '{0}'. - {1}".Fmt(discourseUser.Email, e.Message));
+                    Log.Error("Failed to suspend Discourse for user '{0}'. - {1}".Fmt(discourseUser.Email, e.Message));
                 }
             }
             return null;
