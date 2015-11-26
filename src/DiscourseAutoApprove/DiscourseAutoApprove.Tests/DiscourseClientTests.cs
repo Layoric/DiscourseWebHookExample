@@ -17,7 +17,7 @@ using ServiceStack.Testing;
 
 namespace DiscourseAutoApprove.Tests
 {
-    [NUnit.Framework.Ignore("WARN: Actively updated Discourse")]
+    
     public class DiscourseClientTests
     {
         private readonly ServiceStackHost appHost;
@@ -57,30 +57,32 @@ namespace DiscourseAutoApprove.Tests
             container.Register<IServiceStackAccountClient>(new MockServiceStackAccountClient());
         }
 
+        [NUnit.Framework.Ignore("WARN: Actively updated Discourse")]
         [Test]
         public void TestSuspendAndUnsuspendUser()
         {
             var discourseClient = appHost.Resolve<IDiscourseClient>();
-            discourseClient.AdminSuspendUser(12, 1, "This is a test");
-            var testUser = discourseClient.AdminGetUsers().Where(x => x.Username == "testuser").FirstNonDefault();
+            discourseClient.AdminSuspendUser(4, 1, "This is a test");
+            var testUser = discourseClient.AdminGetUsers().Where(x => x.Username == "archiveuser").FirstNonDefault();
             Assert.That(testUser != null);
-            Assert.That(testUser.Id == 12);
+            Assert.That(testUser.Id == 4);
             Assert.That(testUser.Suspended == true);
 
-            discourseClient.AdminUnsuspendUser(12);
-            testUser = discourseClient.AdminGetUsers().Where(x => x.Username == "testuser").FirstNonDefault();
+            discourseClient.AdminUnsuspendUser(4);
+            testUser = discourseClient.AdminGetUsers().Where(x => x.Username == "archiveuser").FirstNonDefault();
             Assert.That(testUser != null);
-            Assert.That(testUser.Id == 12);
+            Assert.That(testUser.Id == 4);
             Assert.That(testUser.Suspended == null || testUser.Suspended == false);
         }
+
 
         [Test]
         public void TestAdminGetUsers()
         {
             var discourseClient = appHost.Resolve<IDiscourseClient>();
-            var testUser = discourseClient.AdminGetUsers().Where(x => x.Username == "testuser").FirstNonDefault();
+            var testUser = discourseClient.AdminGetUsers(limit:1000).Where(x => x.Username == "archiveuser").FirstNonDefault();
             Assert.That(testUser != null);
-            Assert.That(testUser.Id == 12);
+            Assert.That(testUser.Id == 4);
         }
 
         [Test]
@@ -92,6 +94,18 @@ namespace DiscourseAutoApprove.Tests
             Assert.That(testUser.User.Name, Is.EqualTo("Demis Bellot"));
             Assert.That(testUser.User.Approved, Is.EqualTo(true));
             Assert.That(testUser.User.Moderator, Is.EqualTo(true));
+        }
+
+        [Test]
+        public void TestFindUsersByFilter()
+        {
+            var discourseClient = appHost.Resolve<IDiscourseClient>();
+            var testUsers = discourseClient.AdminFindUsersByFilter("layoric");
+            var testUser = testUsers.FirstOrDefault();
+            Assert.That(testUser, Is.Not.Null);
+            Assert.That(testUser.Username, Is.EqualTo("layoric"));
+            Assert.That(testUser.Approved, Is.EqualTo(true));
+            Assert.That(testUser.Moderator, Is.EqualTo(true));
         }
     }
 }
