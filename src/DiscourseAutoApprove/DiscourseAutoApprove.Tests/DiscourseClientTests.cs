@@ -17,6 +17,7 @@ using ServiceStack.Testing;
 
 namespace DiscourseAutoApprove.Tests
 {
+    [NUnit.Framework.Ignore("WARN: Actively updated Discourse")]
     public class DiscourseClientTests
     {
         private readonly ServiceStackHost appHost;
@@ -80,6 +81,17 @@ namespace DiscourseAutoApprove.Tests
             var testUser = discourseClient.AdminGetUsers().Where(x => x.Username == "testuser").FirstNonDefault();
             Assert.That(testUser != null);
             Assert.That(testUser.Id == 12);
+        }
+
+        [Test]
+        public void TestAdminGetUserById()
+        {
+            var discourseClient = appHost.Resolve<IDiscourseClient>();
+            var testUser = discourseClient.GetUserById("mythz");
+            Assert.That(testUser.User.Username, Is.EqualTo("mythz"));
+            Assert.That(testUser.User.Name, Is.EqualTo("Demis Bellot"));
+            Assert.That(testUser.User.Approved, Is.EqualTo(true));
+            Assert.That(testUser.User.Moderator, Is.EqualTo(true));
         }
     }
 }

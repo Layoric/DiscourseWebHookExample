@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
@@ -132,6 +133,16 @@ namespace DiscourseAutoApprove.Tests
             Assert.That(discourseClient != null);
             Assert.That(discourseClient.SuspendCalledCount == 1);
         }
+
+        [Test]
+        public void TestSyncSingleAccount()
+        {
+            var service = appHost.Resolve<SyncAccountServices>();
+            var req = new SyncSingleUser {UserId = "layoric"};
+            service.Any(req);
+            var discourseClient = appHost.Resolve<IDiscourseClient>() as MockDiscourseClient;
+            Assert.That(discourseClient.ApproveCalledCount > 0);
+        }
     }
 
     public class MockServiceStackAccountClient : IServiceStackAccountClient
@@ -143,7 +154,7 @@ namespace DiscourseAutoApprove.Tests
                 return new UserServiceResponse();
 
             //True test case
-            return new UserServiceResponse {Expiry = new DateTime(2016, 1, 1)};
+            return new UserServiceResponse {Expiry = new DateTime(2020, 1, 1)};
         }
     }
 
@@ -210,14 +221,33 @@ namespace DiscourseAutoApprove.Tests
             throw new NotImplementedException();
         }
 
-        public AdminGetUsersWithEmailResponse AdminGetUsers(int limit = 100)
+        public List<DiscourseUser> AdminGetUsers(int limit = 100)
         {
-            var result = new AdminGetUsersWithEmailResponse();
+            var result = new List<DiscourseUser>();
             result.Add(new DiscourseUser { Email = "test1@test.com", Approved = true}); // Do nothing
             result.Add(new DiscourseUser { Email = "test2@test.com", Approved = false}); //Approve
             result.Add(new DiscourseUser { Email = "test3@test.com", Approved = true, Suspended = true});// Reactivate
             result.Add(new DiscourseUser { Email = "layoric+u15@gmail.com", Approved = true}); //Suspend
             return result;
+        }
+
+        public GetUserByIdResponse GetUserById(string userId)
+        {
+            return new GetUserByIdResponse
+            {
+                User = new DiscourseUser
+                {
+                    Username = userId
+                }
+            };
+        }
+
+        public GetUserEmailByIdResponse GetUserEmail(string userId)
+        {
+            return new GetUserEmailByIdResponse
+            {
+                Email = userId + "@test.com"
+            };
         }
     }
 }

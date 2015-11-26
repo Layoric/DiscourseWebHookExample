@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System.Collections.Generic;
+using System.IO;
 using ServiceStack;
 using ServiceStack.Web;
 
@@ -24,6 +25,30 @@ namespace DiscourseAutoApprove.ServiceModel
     [Route("/sync")]
     public class SyncServiceStackCustomers : IReturnVoid
     {
+    }
+
+    [Route("/sync/users/{UserId}")]
+    public class SyncSingleUser : IReturnVoid
+    {
+        public string UserId { get; set; }
+    }
+
+    [Route("/sync/users")]
+    public class SyncListOfUsers : IReturn<SyncListOfUsersResponse>
+    {
+        public List<string> UserIds { get; set; } 
+    }
+
+    public class SyncListOfUsersResponse
+    {
+        public List<UserSyncResult> Results { get; set; }
+    }
+
+    public class UserSyncResult
+    {
+        public string UserId { get; set; }
+        public bool IsActive { get; set; }
+        public string AccountExpiry { get; set; }
     }
 
     [Route("/daily")]

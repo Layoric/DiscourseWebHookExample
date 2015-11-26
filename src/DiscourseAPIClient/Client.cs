@@ -21,7 +21,9 @@ namespace DiscourseAPIClient
         CreatePostResponse CreateTopic(int categoryId, string title, string content);
         GetTopicResponse GetTopic(int id);
         GetLatestTopicsResponse GetTopics();
-        AdminGetUsersWithEmailResponse AdminGetUsers(int limit = 100);
+        List<DiscourseUser> AdminGetUsers(int limit = 100);
+        GetUserByIdResponse GetUserById(string userId);
+        GetUserEmailByIdResponse GetUserEmail(string userId);
     }
 
     public class DiscourseClient : IDiscourseClient
@@ -73,15 +75,15 @@ namespace DiscourseAPIClient
             csrf = csrfWebresponse.csrf;
             client.Headers.Add("X-Request-With", "XMLHttpRequest");
             client.SetCredentials(userName, pass);
-            var response = client.GetUrl("/session").PostToUrl(new LoginAuth { username = userName, password = pass }, "*/*",
-                (webReq) =>
+            client.GetUrl("/session").PostToUrl(new LoginAuth { username = userName, password = pass }, "*/*",
+                webReq =>
                 {
                     webReq.ContentType = "application/x-www-form-urlencoded; charset=UTF-8";
                     webReq.Headers.Add("X-CSRF-Token", csrfWebresponse.csrf);
                     webReq.Headers.Add("X-Request-With", "XMLHttpRequest");
                     webReq.CookieContainer = client.CookieContainer;
                 },
-                (webRes) =>
+                webRes =>
                 {
                     client.CookieContainer.Add(webRes.Cookies);
                 });
@@ -123,7 +125,7 @@ namespace DiscourseAPIClient
             }
         }
 
-        public AdminGetUsersWithEmailResponse AdminGetUsers(int limit = 100)
+        public List<DiscourseUser> AdminGetUsers(int limit = 100)
         {
             using (JsConfig
                 .With(propertyConvention: PropertyConvention.Lenient,
@@ -134,17 +136,92 @@ namespace DiscourseAPIClient
                 var requestUrl = request.ToGetUrl()
                     .AddQueryParam("api_key", ApiKey).AddQueryParam("api_username", UserName);
                 requestUrl = client.BaseUri.Substring(0, client.BaseUri.Length - 1) + requestUrl;
-                var res = requestUrl.GetJsonFromUrl((webReq) =>
+                var res = requestUrl.GetJsonFromUrl(webReq =>
                 {
                     webReq.ContentType = "application/x-www-form-urlencoded; charset=UTF-8";
                     webReq.Headers.Add("X-CSRF-Token", csrf);
                     webReq.Headers.Add("X-Request-With", "XMLHttpRequest");
                     webReq.CookieContainer = client.CookieContainer;
-                }, (webRes) =>
+                }, webRes =>
                 {
                     client.CookieContainer.Add(webRes.Cookies);
                 });
-                return JsonSerializer.DeserializeFromString<AdminGetUsersWithEmailResponse>(res);
+                return JsonSerializer.DeserializeFromString<List<DiscourseUser>>(res);
+            }
+        }
+
+        public GetUserByIdResponse GetUserById(string userId)
+        {
+            using (JsConfig
+                .With(propertyConvention: PropertyConvention.Lenient,
+                    emitLowercaseUnderscoreNames: true,
+                    emitCamelCaseNames: false))
+            {
+                var request = new GetUserById { UserId = userId};
+                var requestUrl = request.ToGetUrl()
+                    .AddQueryParam("api_key", ApiKey).AddQueryParam("api_username", UserName);
+                requestUrl = client.BaseUri.Substring(0, client.BaseUri.Length - 1) + requestUrl;
+                var res = requestUrl.GetJsonFromUrl(webReq =>
+                {
+                    webReq.ContentType = "application/x-www-form-urlencoded; charset=UTF-8";
+                    webReq.Headers.Add("X-CSRF-Token", csrf);
+                    webReq.Headers.Add("X-Request-With", "XMLHttpRequest");
+                    webReq.CookieContainer = client.CookieContainer;
+                }, webRes =>
+                {
+                    client.CookieContainer.Add(webRes.Cookies);
+                });
+                return JsonSerializer.DeserializeFromString<GetUserByIdResponse>(res);
+            }
+        }
+
+        public GetUserEmailByIdResponse GetUserEmail(string userId)
+        {
+            using (JsConfig
+                .With(propertyConvention: PropertyConvention.Lenient,
+                    emitLowercaseUnderscoreNames: true,
+                    emitCamelCaseNames: false))
+            {
+                var request = new GetUserEmailById { UserId = userId };
+                var requestUrl = request.ToGetUrl()
+                    .AddQueryParam("api_key", ApiKey).AddQueryParam("api_username", UserName);
+                requestUrl = client.BaseUri.Substring(0, client.BaseUri.Length - 1) + requestUrl;
+                var res = requestUrl.GetJsonFromUrl(webReq =>
+                {
+                    webReq.ContentType = "application/x-www-form-urlencoded; charset=UTF-8";
+                    webReq.Headers.Add("X-CSRF-Token", csrf);
+                    webReq.Headers.Add("X-Request-With", "XMLHttpRequest");
+                    webReq.CookieContainer = client.CookieContainer;
+                }, webRes =>
+                {
+                    client.CookieContainer.Add(webRes.Cookies);
+                });
+                return JsonSerializer.DeserializeFromString<GetUserEmailByIdResponse>(res);
+            }
+        }
+
+        public GetUserEmailByIdResponse GetUserEmailById(string userId)
+        {
+            using (JsConfig
+                .With(propertyConvention: PropertyConvention.Lenient,
+                    emitLowercaseUnderscoreNames: true,
+                    emitCamelCaseNames: false))
+            {
+                var request = new GetUserEmailById { UserId = userId };
+                var requestUrl = request.ToGetUrl()
+                    .AddQueryParam("api_key", ApiKey).AddQueryParam("api_username", UserName);
+                requestUrl = client.BaseUri.Substring(0, client.BaseUri.Length - 1) + requestUrl;
+                var res = requestUrl.GetJsonFromUrl(webReq =>
+                {
+                    webReq.ContentType = "application/x-www-form-urlencoded; charset=UTF-8";
+                    webReq.Headers.Add("X-CSRF-Token", csrf);
+                    webReq.Headers.Add("X-Request-With", "XMLHttpRequest");
+                    webReq.CookieContainer = client.CookieContainer;
+                }, webRes =>
+                {
+                    client.CookieContainer.Add(webRes.Cookies);
+                });
+                return JsonSerializer.DeserializeFromString<GetUserEmailByIdResponse>(res);
             }
         }
 
@@ -214,13 +291,13 @@ namespace DiscourseAPIClient
                 var requestUrl = request.ToPutUrl()
                     .AddQueryParam("api_key", ApiKey).AddQueryParam("api_username", UserName);
                 requestUrl = client.BaseUri.Substring(0, client.BaseUri.Length - 1) + requestUrl;
-                var res = requestUrl.PutToUrl(null, "*/*", (webReq) =>
+                var res = requestUrl.PutToUrl(null, "*/*", webReq =>
                 {
                     webReq.ContentType = "application/x-www-form-urlencoded; charset=UTF-8";
                     webReq.Headers.Add("X-CSRF-Token", csrf);
                     webReq.Headers.Add("X-Request-With", "XMLHttpRequest");
                     webReq.CookieContainer = client.CookieContainer;
-                }, (webRes) =>
+                }, webRes =>
                 {
                     client.CookieContainer.Add(webRes.Cookies);
                 });
@@ -246,13 +323,13 @@ namespace DiscourseAPIClient
                 var requestUrl = request.ToPutUrl()
                     .AddQueryParam("api_key", ApiKey).AddQueryParam("api_username", UserName);
                 requestUrl = client.BaseUri.Substring(0, client.BaseUri.Length - 1) + requestUrl;
-                var res = requestUrl.PutToUrl(new { duration = days, reason = reasonGiven }, "*/*", (webReq) =>
+                var res = requestUrl.PutToUrl(new { duration = days, reason = reasonGiven }, "*/*", webReq =>
                 {
                     webReq.ContentType = "application/x-www-form-urlencoded; charset=UTF-8";
                     webReq.Headers.Add("X-CSRF-Token", csrf);
                     webReq.Headers.Add("X-Request-With", "XMLHttpRequest");
                     webReq.CookieContainer = client.CookieContainer;
-                }, (webRes) =>
+                }, webRes =>
                 {
                     client.CookieContainer.Add(webRes.Cookies);
                 });
@@ -276,13 +353,13 @@ namespace DiscourseAPIClient
                 var requestUrl = request.ToPutUrl()
                     .AddQueryParam("api_key", ApiKey).AddQueryParam("api_username", UserName);
                 requestUrl = client.BaseUri.Substring(0, client.BaseUri.Length - 1) + requestUrl;
-                var res = requestUrl.PutToUrl(null, "*/*", (webReq) =>
+                var res = requestUrl.PutToUrl(null, "*/*", webReq =>
                 {
                     webReq.ContentType = "application/x-www-form-urlencoded; charset=UTF-8";
                     webReq.Headers.Add("X-CSRF-Token", csrf);
                     webReq.Headers.Add("X-Request-With", "XMLHttpRequest");
                     webReq.CookieContainer = client.CookieContainer;
-                }, (webRes) =>
+                }, webRes =>
                 {
                     client.CookieContainer.Add(webRes.Cookies);
                 });
@@ -305,6 +382,11 @@ namespace DiscourseAPIClient
                 return client.Post<CreateCategoryResponse>(requestUrl, request);
             }
         }
+    }
+
+    public class GetUserByIdResponse
+    {
+        public DiscourseUser User { get; set; }
     }
 
 
@@ -340,14 +422,27 @@ namespace DiscourseAPIClient
     }
 
     [Route("/admin/users.json?show_emails=true", "GET")]
-    public class AdminGetUsersWithEmail : IReturn<AdminGetUsersWithEmailResponse>
+    public class AdminGetUsersWithEmail : IReturn<List<DiscourseUser>>
     {
         public int limit { get; set; }
     }
 
-    public class AdminGetUsersWithEmailResponse : List<DiscourseUser>
+    [Route("/users/{UserId}/emails.json")]
+    public class GetUserEmailById : IReturn<GetUserEmailByIdResponse>
     {
+        public string UserId { get; set; }
+    }
 
+    public class GetUserEmailByIdResponse
+    {
+        public string Email { get; set; }
+        public string AssociatedAccounts { get; set; }
+    }
+
+    [Route("/users/{UserId}")]
+    public class GetUserById : IReturn<DiscourseUser>
+    {
+        public string UserId { get; set; }
     }
 
     [Route("/posts", "POST")]
