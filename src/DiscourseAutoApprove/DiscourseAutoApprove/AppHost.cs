@@ -1,12 +1,15 @@
 ﻿using System.IO;
 using DiscourseAPIClient;
 using DiscourseAutoApprove.ServiceInterface;
+using DiscourseAutoApprove.ServiceModel;
 using Funq;
 using ServiceStack;
 using ServiceStack.Configuration;
+using ServiceStack.FluentValidation;
 using ServiceStack.Logging;
 using ServiceStack.Logging.EventLog;
 using ServiceStack.Razor;
+using ServiceStack.Validation;
 
 namespace DiscourseAutoApprove
 {
@@ -45,6 +48,7 @@ namespace DiscourseAutoApprove
             LogManager.LogFactory = new EventLogFactory("DiscourseAutoApprover","Application");
 
             Plugins.Add(new RazorFormat());
+            Plugins.Add(new ValidationFeature());
             container.Register(AppSettings);
 
             var client = new DiscourseClient(
@@ -56,6 +60,14 @@ namespace DiscourseAutoApprove
 
             var serviceStackAccountClient = new ServiceStackAccountClient(AppSettings.GetString("CheckSubscriptionUrl"));
             container.Register<IServiceStackAccountClient>(serviceStackAccountClient);
+        }
+    }
+
+    public class SyncSingleUserByEmailValidator : AbstractValidator<SyncSingleUserByEmail>
+    {
+        public SyncSingleUserByEmailValidator()
+        {
+            RuleFor(x => x.Email).EmailAddress();
         }
     }
 }

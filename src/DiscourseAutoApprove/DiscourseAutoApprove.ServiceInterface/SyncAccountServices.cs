@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Threading;
 using DiscourseAPIClient;
 using DiscourseAPIClient.Types;
@@ -117,6 +118,28 @@ namespace DiscourseAutoApprove.ServiceInterface
                 Log.Info("Updating {0} account status.".Fmt(userId));
                 Any(new SyncSingleUser {UserId = userId});
             }
+        }
+
+        public void Any(SyncSingleUserByEmail request)
+        {
+            if (request.Email == null)
+            {
+                throw new HttpError(400,"MissingEmail");
+            }
+
+            // Filter value in discourse matches on various things, including email.
+            // However, it will make on email within email, eg test@.foo.com vs test@foo.com.au or bar@foo.com vs foo.bar@foo.com..
+            // To avoid abuse of the discourse generic filter, request.Email is validated to be an email address via `SyncSingleUserByEmailValidator`
+            var users = DiscourseClient.AdminFindUsersByFilter(request.Email);
+
+            var user = users.FirstOrDefault();
+            if (user == null)
+            {
+                throw new HttpError(400,"Failed");
+            }
+
+            var serviceStackSubscription = GetDiscourseUserServiceStackSubscription(user);
+            UpdateDiscourseAccountStatus(user, serviceStackSubscription, 1000);
         }
 
         private void ApproveUser(DiscourseUser discourseUser)

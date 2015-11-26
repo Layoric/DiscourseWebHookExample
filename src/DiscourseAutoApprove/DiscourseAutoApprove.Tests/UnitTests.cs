@@ -249,5 +249,10 @@ namespace DiscourseAutoApprove.Tests
                 Email = userId + "@test.com"
             };
         }
+
+        public List<DiscourseUser> AdminFindUsersByFilter(string filter)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

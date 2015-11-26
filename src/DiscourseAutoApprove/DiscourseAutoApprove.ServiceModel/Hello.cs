@@ -33,6 +33,11 @@ namespace DiscourseAutoApprove.ServiceModel
         public string UserId { get; set; }
     }
 
+    public class SyncSingleUserByEmail : IReturnVoid
+    {
+        public string Email { get; set; }
+    }
+
     [Route("/sync/users")]
     public class SyncListOfUsers : IReturn<SyncListOfUsersResponse>
     {

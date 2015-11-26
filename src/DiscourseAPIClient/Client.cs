@@ -24,6 +24,7 @@ namespace DiscourseAPIClient
         List<DiscourseUser> AdminGetUsers(int limit = 100);
         GetUserByIdResponse GetUserById(string userId);
         GetUserEmailByIdResponse GetUserEmail(string userId);
+        List<DiscourseUser> AdminFindUsersByFilter(string filter);
     }
 
     public class DiscourseClient : IDiscourseClient
@@ -182,7 +183,7 @@ namespace DiscourseAPIClient
                     emitLowercaseUnderscoreNames: true,
                     emitCamelCaseNames: false))
             {
-                var request = new GetUserEmailById { UserId = userId };
+                var request = new AdminGetUserEmailById { UserId = userId };
                 var requestUrl = request.ToGetUrl()
                     .AddQueryParam("api_key", ApiKey).AddQueryParam("api_username", UserName);
                 requestUrl = client.BaseUri.Substring(0, client.BaseUri.Length - 1) + requestUrl;
@@ -200,14 +201,40 @@ namespace DiscourseAPIClient
             }
         }
 
-        public GetUserEmailByIdResponse GetUserEmailById(string userId)
+        public List<DiscourseUser> AdminFindUsersByFilter(string filter)
+        {
+            using (JsConfig
+               .With(propertyConvention: PropertyConvention.Lenient,
+                   emitLowercaseUnderscoreNames: true,
+                   emitCamelCaseNames: false))
+            {
+                var request = new AdminGetUsers();
+                var requestUrl = request.ToGetUrl()
+                    .AddQueryParam("api_key", ApiKey).AddQueryParam("api_username", UserName)
+                    .AddQueryParam("filter", filter);
+                requestUrl = client.BaseUri.Substring(0, client.BaseUri.Length - 1) + requestUrl;
+                var res = requestUrl.GetJsonFromUrl(webReq =>
+                {
+                    webReq.ContentType = "application/x-www-form-urlencoded; charset=UTF-8";
+                    webReq.Headers.Add("X-CSRF-Token", csrf);
+                    webReq.Headers.Add("X-Request-With", "XMLHttpRequest");
+                    webReq.CookieContainer = client.CookieContainer;
+                }, webRes =>
+                {
+                    client.CookieContainer.Add(webRes.Cookies);
+                });
+                return JsonSerializer.DeserializeFromString<List<DiscourseUser>>(res);
+            }
+        }
+
+        public GetUserEmailByIdResponse AdminGetUserEmailById(string userId)
         {
             using (JsConfig
                 .With(propertyConvention: PropertyConvention.Lenient,
                     emitLowercaseUnderscoreNames: true,
                     emitCamelCaseNames: false))
             {
-                var request = new GetUserEmailById { UserId = userId };
+                var request = new AdminGetUserEmailById { UserId = userId };
                 var requestUrl = request.ToGetUrl()
                     .AddQueryParam("api_key", ApiKey).AddQueryParam("api_username", UserName);
                 requestUrl = client.BaseUri.Substring(0, client.BaseUri.Length - 1) + requestUrl;
@@ -427,8 +454,13 @@ namespace DiscourseAPIClient
         public int limit { get; set; }
     }
 
+    [Route("/admin/users")]
+    public class AdminGetUsers : IReturn<List<DiscourseUser>>
+    {
+    }
+
     [Route("/users/{UserId}/emails.json")]
-    public class GetUserEmailById : IReturn<GetUserEmailByIdResponse>
+    public class AdminGetUserEmailById : IReturn<GetUserEmailByIdResponse>
     {
         public string UserId { get; set; }
     }
