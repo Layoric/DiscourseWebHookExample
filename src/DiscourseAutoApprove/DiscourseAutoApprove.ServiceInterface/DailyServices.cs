@@ -47,6 +47,7 @@ namespace DiscourseAutoApprove.ServiceInterface
                     }
                 }
 
+                //Skip users with valid SS subscriptions.
                 if (existingCustomerSubscription.HasValidSubscription())
                 {
                     continue;
