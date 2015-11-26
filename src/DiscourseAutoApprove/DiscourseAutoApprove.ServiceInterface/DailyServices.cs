@@ -47,11 +47,16 @@ namespace DiscourseAutoApprove.ServiceInterface
                     }
                 }
 
+                if (existingCustomerSubscription.HasValidSubscription())
+                {
+                    continue;
+                }
+
                 try
                 {
                     Thread.Sleep(2000);
                     //Existing user with active account but without a valid subscription
-                    if (!discourseUser.NeedsApproval() && !existingCustomerSubscription.HasValidSubscription() && discourseUser.Suspended != true)
+                    if (!discourseUser.NeedsApproval() && discourseUser.Suspended != true)
                     {
                         Log.Info("Suspending user '{0}'.".Fmt(discourseUser.Email));
                         SuspendUser(discourseUser);
