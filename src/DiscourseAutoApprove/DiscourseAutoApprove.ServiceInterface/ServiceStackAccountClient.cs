@@ -30,6 +30,7 @@ namespace DiscourseAutoApprove.ServiceInterface
             catch (Exception e)
             {
                 Log.Error(e.Message);
+                throw;
             }
 
             return result;
