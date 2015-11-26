@@ -22,8 +22,8 @@ namespace DiscourseAutoApprove.ServiceInterface
             var users = DiscourseClient.AdminGetUsers(1000);
             foreach (var discourseUser in users)
             {
-                //Don't process discourse administrators
-                if (discourseUser.Admin)
+                //Don't process discourse administrators or already suspended users
+                if (discourseUser.Admin || discourseUser.Suspended == true)
                 {
                     continue;
                 }
