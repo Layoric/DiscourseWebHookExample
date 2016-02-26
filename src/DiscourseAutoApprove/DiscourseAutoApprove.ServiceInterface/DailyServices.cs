@@ -23,7 +23,7 @@ namespace DiscourseAutoApprove.ServiceInterface
             foreach (var discourseUser in users)
             {
                 //Don't process discourse administrators or already suspended users
-                if (discourseUser.Admin || discourseUser.Suspended == true)
+                if (discourseUser.Admin || discourseUser.IsSuspended())
                 {
                     continue;
                 }
@@ -58,7 +58,7 @@ namespace DiscourseAutoApprove.ServiceInterface
                 {
                     Thread.Sleep(2000);
                     //Existing user with active account but without a valid subscription
-                    if (!discourseUser.NeedsApproval() && discourseUser.Suspended != true)
+                    if (!discourseUser.NeedsApproval() && discourseUser.IsNotSuspended())
                     {
                         Log.Info("Suspending user '{0}'.".Fmt(discourseUser.Email));
                         SuspendUser(discourseUser);

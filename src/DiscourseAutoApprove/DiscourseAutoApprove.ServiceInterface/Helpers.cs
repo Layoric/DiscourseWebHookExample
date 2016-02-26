@@ -38,6 +38,17 @@ namespace DiscourseAutoApprove.ServiceInterface
             return !user.Approved;
         }
 
+        public static bool IsSuspended(this DiscourseUser user)
+        {
+            return user.Suspended == true;
+        }
+
+        public static bool IsNotSuspended(this DiscourseUser user)
+        {
+            // user.Suspended == null also means not suspended. 
+            return user.Suspended != true;
+        }
+
         public static bool HasValidSubscription(this UserServiceResponse serviceStackAccount)
         {
             return

@@ -213,7 +213,7 @@ namespace DiscourseAPIClient
                 var request = new AdminGetUsers();
                 var requestUrl = request.ToGetUrl()
                     .AddQueryParam("api_key", ApiKey).AddQueryParam("api_username", UserName)
-                    .AddQueryParam("filter", filter);
+                    .AddQueryParam("filter", filter).AddQueryParam("show_emails", "true");
                 requestUrl = client.BaseUri.Substring(0, client.BaseUri.Length - 1) + requestUrl;
                 var res = requestUrl.GetJsonFromUrl(webReq =>
                 {

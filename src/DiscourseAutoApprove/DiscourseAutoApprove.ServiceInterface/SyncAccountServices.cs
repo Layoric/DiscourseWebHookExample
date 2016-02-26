@@ -40,7 +40,7 @@ namespace DiscourseAutoApprove.ServiceInterface
             try
             {
                 Thread.Sleep(throttleRequestTime);
-                if (discourseUser.NeedsApproval() && existingCustomerSubscription.HasValidSubscription())
+                if ((discourseUser.NeedsApproval() || discourseUser.IsSuspended()) && existingCustomerSubscription.HasValidSubscription())
                 {
                     Log.Info("Approving user '{0}'.".Fmt(discourseUser.Email));
                     ApproveUser(discourseUser);

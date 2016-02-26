@@ -23,7 +23,7 @@ namespace DiscourseAutoApprove.ServiceInterface
             foreach (var discourseUser in users)
             {
                 //Don't process discourse administrators or users already approved.
-                if (discourseUser.Admin || discourseUser.Approved)
+                if (discourseUser.Admin || (discourseUser.Suspended == null || discourseUser.Suspended == false))
                 {
                     continue;
                 }
@@ -47,18 +47,21 @@ namespace DiscourseAutoApprove.ServiceInterface
                     }
                 }
 
-                try
+                if (existingCustomerSubscription.HasValidSubscription())
                 {
-                    Thread.Sleep(2000);
-                    if (existingCustomerSubscription.HasValidSubscription() && discourseUser.Suspended == true)
+                    try
                     {
-                        Log.Info("Unsuspending user '{0}'.".Fmt(discourseUser.Email));
-                        UnsuspendUser(discourseUser);
+                        Thread.Sleep(2000);
+                        if (discourseUser.Suspended == true)
+                        {
+                            Log.Info("Unsuspending user '{0}'.".Fmt(discourseUser.Email));
+                            UnsuspendUser(discourseUser);
+                        }
                     }
-                }
-                catch (Exception e)
-                {
-                    Log.Error("Failed to suspend Discourse for user '{0}'. - {1}".Fmt(discourseUser.Email, e.Message));
+                    catch (Exception e)
+                    {
+                        Log.Error("Failed to suspend Discourse for user '{0}'. - {1}".Fmt(discourseUser.Email, e.Message));
+                    }
                 }
             }
             return null;
