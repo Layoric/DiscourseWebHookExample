@@ -135,7 +135,9 @@ namespace DiscourseAPIClient
             {
                 var request = new AdminGetUsersWithEmail { limit = limit };
                 var requestUrl = request.ToGetUrl()
-                    .AddQueryParam("api_key", ApiKey).AddQueryParam("api_username", UserName);
+                    .AddQueryParam("show_emails","true")
+                    .AddQueryParam("api_key", ApiKey)
+                    .AddQueryParam("api_username", UserName);
                 requestUrl = client.BaseUri.Substring(0, client.BaseUri.Length - 1) + requestUrl;
                 var res = requestUrl.GetJsonFromUrl(webReq =>
                 {
@@ -448,7 +450,7 @@ namespace DiscourseAPIClient
         public int TopicId { get; set; }
     }
 
-    [Route("/admin/users.json?show_emails=true", "GET")]
+    [Route("/admin/users.json", "GET")]
     public class AdminGetUsersWithEmail : IReturn<List<DiscourseUser>>
     {
         public int limit { get; set; }

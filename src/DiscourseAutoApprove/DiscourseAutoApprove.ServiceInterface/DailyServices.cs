@@ -35,14 +35,15 @@ namespace DiscourseAutoApprove.ServiceInterface
                 }
                 catch (Exception e)
                 {
-                    Log.Error("Failed to check user's subscription. Retrying... - {0}".Fmt(e.Message));
+                    
+                    Log.Error("Failed to check user {0} subscription. Retrying... - {2}".Fmt(discourseUser.Username, e.Message));
                     try
                     {
                         existingCustomerSubscription = ServiceStackAccountClient.GetUserSubscription(discourseUser.Email);
                     }
                     catch (Exception ex)
                     {
-                        Log.Error("Failed to check user's subscription. Cancelling sync. - {0}".Fmt(ex.Message));
+                        Log.Error("Failed to check user {0} subscription. Cancelling sync. - {1}".Fmt(discourseUser.Username, ex.Message));
                         break;
                     }
                 }
