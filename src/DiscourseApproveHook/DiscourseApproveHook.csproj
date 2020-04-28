@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp2.2</TargetFramework>
+    <AspNetCoreHostingModel>InProcess</AspNetCoreHostingModel>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.App" />
+    <PackageReference Include="Microsoft.AspNetCore.Razor.Design" Version="2.2.0" PrivateAssets="All" />
+    <PackageReference Include="ServiceStack" Version="5.6.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\DiscourseAPIClient\DiscourseAPIClient.csproj" />
+    <ProjectReference Include="..\DiscourseAutoApprove\DiscourseAutoApprove.ServiceInterface\DiscourseAutoApprove.ServiceInterface.csproj" />
+    <ProjectReference Include="..\DiscourseAutoApprove\DiscourseAutoApprove.ServiceModel\DiscourseAutoApprove.ServiceModel.csproj" />
+  </ItemGroup>
+
+</Project>

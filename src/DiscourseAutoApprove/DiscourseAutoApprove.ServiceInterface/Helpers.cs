@@ -49,12 +49,7 @@ namespace DiscourseAutoApprove.ServiceInterface
             return user.Suspended != true;
         }
 
-        public static bool HasValidSubscription(this UserServiceResponse serviceStackAccount)
-        {
-            return
-                serviceStackAccount != null &&
-                serviceStackAccount.Expiry != null &&
-                serviceStackAccount.Expiry > DateTime.Now;
-        }
+        public static bool HasValidSubscription(this UserServiceResponse serviceStackAccount) => 
+            serviceStackAccount?.Expiry != null && serviceStackAccount.Expiry > DateTime.Now;
     }
 }

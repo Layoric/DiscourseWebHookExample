@@ -61,7 +61,7 @@ namespace DiscourseAutoApprove.ServiceInterface
             }
             catch (Exception e)
             {
-                Log.Error("Failed to check user {0} subscription. Retrying... - {1}".Fmt(discourseUser.Username,e.Message));
+                Log.Error("Failed to check user {0} subscription. Retrying... - {1}".Fmt(discourseUser.Username, e.Message));
                 try
                 {
                     existingCustomerSubscription = ServiceStackAccountClient.GetUserSubscription(discourseUser.Email);
@@ -79,7 +79,7 @@ namespace DiscourseAutoApprove.ServiceInterface
         {
             if (request.UserId == null)
             {
-                throw new HttpError(400,"BadRequest");
+                throw new HttpError(400, "BadRequest");
             }
 
             GetUserByIdResponse user;
@@ -90,42 +90,44 @@ namespace DiscourseAutoApprove.ServiceInterface
             catch (Exception e)
             {
                 Log.Error("Failed to get user from Discourse - {0}".Fmt(e.Message), e);
-                throw new HttpError(500,"Failed to get user from Discourse");
+                throw new HttpError(500, "Failed to get user from Discourse");
             }
 
             if (user == null)
-            {
-                throw HttpError.NotFound("User not found in Discourse"); 
-            }
+                throw HttpError.NotFound("User not found in Discourse");
+
             // Email is ONLY populated when performing admin get all users as Discourse API allows it via show_emails
             // query string. Single user request doesn't have same rules..
-            var emailResponse = DiscourseClient.GetUserEmail(request.UserId);
-            user.User.Email = emailResponse.Email;
+            try
+            {
+                var emailResponse = DiscourseClient.GetUserEmail(request.UserId);
+                user.User.Email = emailResponse.Email;
+            }
+            catch (Exception ex)
+            {
+                throw new HttpError(500, "Failed to get email from Discourse: " + ex.Message);
+            }
 
             var serviceStackSubscription = GetDiscourseUserServiceStackSubscription(user.User);
-            UpdateDiscourseAccountStatus(user.User,serviceStackSubscription,1000);
+            UpdateDiscourseAccountStatus(user.User, serviceStackSubscription, 1000);
         }
 
         public void Any(SyncListOfUsers request)
         {
             if (request.UserIds == null)
-            {
-                throw new HttpError(400,"MissingUserIDs");
-            }
+                throw new HttpError(400, "MissingUserIDs");
 
             foreach (var userId in request.UserIds)
             {
                 Log.Info("Updating {0} account status.".Fmt(userId));
-                Any(new SyncSingleUser {UserId = userId});
+                Any(new SyncSingleUser { UserId = userId });
             }
         }
 
         public void Any(SyncSingleUserByEmail request)
         {
             if (request.Email == null)
-            {
-                throw new HttpError(400,"MissingEmail");
-            }
+                throw new HttpError(400, "MissingEmail");
 
             // Filter value in discourse matches on various things, including email.
             // However, it will make on email within email, eg test@.foo.com vs test@foo.com.au or bar@foo.com vs foo.bar@foo.com..
@@ -134,9 +136,7 @@ namespace DiscourseAutoApprove.ServiceInterface
 
             var user = users.FirstOrDefault();
             if (user == null)
-            {
-                throw new HttpError(400,"Failed");
-            }
+                throw new HttpError(400, "Failed");
 
             var serviceStackSubscription = GetDiscourseUserServiceStackSubscription(user);
             UpdateDiscourseAccountStatus(user, serviceStackSubscription, 1000);

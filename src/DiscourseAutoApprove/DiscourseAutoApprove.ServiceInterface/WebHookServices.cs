@@ -35,6 +35,7 @@ namespace DiscourseAutoApprove.ServiceInterface
             {
                 Log.Info("User {0} with email {1} did have a valid subscription. Approving.".Fmt(discourseUser.Id, discourseUser.Email));
                 ThreadPool.QueueUserWorkItem(BackgroundApprove, discourseUser);
+                //ApproveUser(discourseUser);
             }
             else
             {

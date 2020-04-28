@@ -36,13 +36,18 @@ namespace DiscourseAPIClient
 
         private readonly JsonServiceClient client;
 
-        public DiscourseClient(string url, string apiKey, string userName)
+        public DiscourseClient(string baseUrl, string apiKey, string userName)
         {
             ApiKey = apiKey;
             UserName = userName;
-            client = new JsonServiceClient(url);
-            client.Get(url.AppendPath("top.json").AddQueryParam("api_key", apiKey).AddQueryParam("api_username", userName));
+            client = new JsonServiceClient(baseUrl);
+            var url = CreateApiUrl("top.json");
+            var json = url.GetJsonFromUrl();
         }
+
+        public string CreateApiUrl(string apiPath) =>
+            client.BaseUri.CombineWith(apiPath).AddQueryParam("api_key", ApiKey).AddQueryParam("api_username", UserName);
+
 
         [Route("/session")]
         public class LoginAuth

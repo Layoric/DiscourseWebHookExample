@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 2013
-VisualStudioVersion = 12.0.31101.0
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.28922.388
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DiscourseAutoApprove", "DiscourseAutoApprove\DiscourseAutoApprove\DiscourseAutoApprove.csproj", "{6F86FC59-9DE7-4BF5-8D11-CB7E99DA29FC}"
 EndProject
@@ -12,6 +12,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DiscourseAutoApprove.Tests", "DiscourseAutoApprove\DiscourseAutoApprove.Tests\DiscourseAutoApprove.Tests.csproj", "{B1665387-EF91-4CA0-82BB-66E5781ED800}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DiscourseAPIClient", "DiscourseAPIClient\DiscourseAPIClient.csproj", "{25A0D308-26A9-4021-899A-8B9B36D787F6}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DiscourseApproveHook", "DiscourseApproveHook\DiscourseApproveHook.csproj", "{6C39CCB2-F133-40E2-83EA-D0CB68BE9AE5}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -39,8 +41,15 @@ Global
 		{25A0D308-26A9-4021-899A-8B9B36D787F6}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{25A0D308-26A9-4021-899A-8B9B36D787F6}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{25A0D308-26A9-4021-899A-8B9B36D787F6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6C39CCB2-F133-40E2-83EA-D0CB68BE9AE5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6C39CCB2-F133-40E2-83EA-D0CB68BE9AE5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6C39CCB2-F133-40E2-83EA-D0CB68BE9AE5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6C39CCB2-F133-40E2-83EA-D0CB68BE9AE5}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {EE34E05F-69A7-4C38-8435-46741C720C09}
 	EndGlobalSection
 EndGlobal
